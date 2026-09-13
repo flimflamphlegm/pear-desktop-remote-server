@@ -21,7 +21,7 @@
         }
         .card { 
             background: {{CARD_BACKGROUND}}; 
-            padding: 20px; 
+            padding: 24px 20px; 
             border-radius: 24px; 
             border: 1px solid #222; 
             box-shadow: 0 10px 40px rgba(0,0,0,0.8); 
@@ -36,7 +36,7 @@
             max-height: {{ARTWORK_MAX_HEIGHT}};
             background: #1a1a1a; 
             border-radius: 16px; 
-            margin-bottom: 14px; 
+            margin-bottom: 18px; 
             overflow: hidden; 
             display: flex; 
             align-items: center; 
@@ -45,46 +45,64 @@
         }
         .art-box img { width: 100%; height: 100%; object-fit: cover; }
         .art-placeholder { font-size: 3rem; opacity: 0.2; }
+        
         .meta-container {
             display: flex;
             flex-direction: column;
-            gap: 2px;
-            margin-bottom: 14px;
+            gap: 4px;
+            margin-bottom: 18px;
+        }
+        
+        /* BUMPED UP TEXT SIZES */
+        h2 { 
+            margin: 0 0 4px 0; 
+            font-size: 1.55rem; /* Much larger title */
+            font-weight: 700;
+            color: #fff; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
         }
         .track-sub { 
             margin: 0; 
-            font-size: 0.85rem; 
+            font-size: 1.05rem; /* Larger artist/album */
             color: #aaa; 
-            font-weight: 400; 
+            font-weight: 500; 
             white-space: nowrap; 
             overflow: hidden; 
             text-overflow: ellipsis; 
         }
 
-
-        h2 { margin: 0 0 4px 0; font-size: 1.1rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        h3 { margin: 0 0 14px 0; font-size: 0.85rem; color: #aaa; font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        
-        .progress-panel { margin-bottom: 16px; width: 100%; pointer-events: none; }
+        .progress-panel { margin-bottom: 18px; width: 100%; pointer-events: none; }
         .track-bar { 
             width: 100%; 
             height: {{TRACK_BAR_HEIGHT}}; 
             background: #282828; 
-            border-radius: 3px; 
+            border-radius: 4px; 
             position: relative; 
             overflow: hidden;
             cursor: default;
         }
         .track-fill { background: {{ACCENT_COLOR}}; height: 100%; width: 0%; transition: none; }
-        .time-labels { display: flex; justify-content: space-between; font-size: 0.72rem; color: #888; margin-top: 5px; font-variant-numeric: tabular-nums; }
-
+        
+        .time-labels { 
+            display: flex; 
+            justify-content: space-between; 
+            font-size: 0.85rem; /* Larger track times */
+            font-weight: 600;
+            color: #888; 
+            margin-top: 8px; 
+            font-variant-numeric: tabular-nums; 
+        }
 
         .controls { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 18px; }
+        
+        /* SLIMMER BUTTONS */
         button { 
             background: #212121; 
             color: #fff; 
             border: 1px solid #333; 
-            padding: 12px 14px; 
+            padding: 10px 12px; /* Reduced vertical padding */
             font-size: 0.9rem; 
             font-weight: bold; 
             border-radius: 30px; 
@@ -97,13 +115,27 @@
         button:active { transform: scale(0.95); background: #333; }
         .btn-primary { background: {{ACCENT_COLOR}}; border: none; flex: 1.3; font-size: 0.95rem; }
         
-        .vol-panel { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 6px; width: 100%; }
+        .vol-panel { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; width: 100%; }
+
+        /* ... (keep .btn-vol as it is) ... */
+
+        .bar-container { 
+            flex-grow: 1; 
+            margin: 0 18px; /* Forces exactly 18px of unbreakable space on left and right */
+            background: #212121; 
+            height: 8px; 
+            border-radius: 4px; 
+            overflow: hidden; 
+            position: relative; 
+        }
+                
+        /* SMALLER VOLUME BUTTONS */
         .btn-vol { 
             background: #212121; 
             color: #fff; 
-            width: 44px; 
-            height: 44px; 
-            min-height: 44px;
+            width: 38px;  /* Shrunk from 44px */
+            height: 38px; 
+            min-height: 38px;
             padding: 0; 
             font-size: 1.2rem; 
             display: flex; 
@@ -114,15 +146,13 @@
             flex: none;
         }
         .btn-vol:active { background: #333; transform: scale(0.9); }
-        .bar-container { flex-grow: 1; background: #212121; height: 8px; border-radius: 4px; overflow: hidden; position: relative; }
         .bar-fill { background: {{ACCENT_COLOR}}; height: 100%; width: 50%; transition: width 0.15s ease-out; }
-        /* .vol-label { font-size: 0.75rem; color: #888; margin-bottom: 4px; display: block; text-align: center; } */
-
 
         @media (max-height: 600px) {
             .card { padding: 12px; }
             .art-box { max-height: 150px; margin-bottom: 10px; }
-            h3 { margin-bottom: 10px; }
+            h2 { font-size: 1.3rem; }
+            .track-sub { font-size: 0.95rem; }
             .progress-panel { margin-bottom: 10px; }
             .controls { margin-bottom: 10px; }
         }
@@ -134,13 +164,11 @@
             <span class="art-placeholder" id="art-ph">🎵</span>
         </div>
 
-
         <h2 id="title">YouTube Music</h2>
         <div class="meta-container">
             <div id="artist" class="track-sub">Connecting...</div>
             <div id="album" class="track-sub"></div>
         </div>
-
 
         <div class="progress-panel">
             <div class="track-bar" id="track-bar">
@@ -152,7 +180,6 @@
             </div>
         </div>
 
-
         <div class="controls">
             <button onclick="sendControl('prev')">❮ Prev</button>
             <button class="btn-primary" id="play-btn" onclick="sendControl('playpause')">Play ▶</button>
@@ -160,7 +187,6 @@
         </div>
         
         <div>
-            <!-- <span class="vol-label">Volume (<span id="vol-txt">50</span>%)</span> -->
             <div class="vol-panel">
                 <button class="btn-vol" onclick="sendControl('vol_down')">−</button>
                 <div class="bar-container">
@@ -170,7 +196,6 @@
             </div>
         </div>
     </div>
-
 
     <script>
         let isSending = false;

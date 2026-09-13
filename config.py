@@ -12,9 +12,9 @@ POLL_INTERVAL_MS = 1500  # How often web UI polls server for updates
 
 # Mobile Display Customizations
 CARD_MAX_WIDTH = "340px"
-ARTWORK_MAX_HEIGHT = "250px"
+ARTWORK_MAX_HEIGHT = "340px"
 TRACK_BAR_HEIGHT = "6px"
-BUTTON_MIN_HEIGHT = "48px"
+BUTTON_MIN_HEIGHT = "20px"
 ACCENT_COLOR = "#ff0000"  # Play button & progress fill color
 BACKGROUND_COLOR = "#030303"
 CARD_BACKGROUND = "#131313"
