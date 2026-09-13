@@ -18,11 +18,11 @@
             justify-content: center; 
             height: 100vh;
             height: 100dvh;
-            overflow: hidden; /* Locks the page so it never scrolls */
+            overflow: hidden; 
         }
         .card { 
             background: {{CARD_BACKGROUND}}; 
-            padding: 10px 14px;
+            padding: 10px 14px; 
             border-radius: 20px; 
             border: 1px solid #222; 
             box-shadow: 0 10px 40px rgba(0,0,0,0.8); 
@@ -32,13 +32,13 @@
             max-height: 99dvh;
             display: flex;
             flex-direction: column;
-            justify-content: flex-start;
+            justify-content: flex-start; 
             margin: auto;
         }
         
         .art-box { 
             width: 100%; 
-            max-height: 42vh;
+            max-height: 42vh; 
             position: relative; 
             margin: 0 auto 4px auto; 
             background: #1a1a1a; 
@@ -47,15 +47,7 @@
             border: 1px solid #2a2a2a; 
             flex-shrink: 1; 
         }
-
-        .meta-container {
-            display: flex;
-            flex-direction: column;
-            gap: 1px;
-            margin-bottom: 4px; 
-        }
         
-        /* The classic bulletproof square trick for old browsers */
         .art-box::after {
             content: "";
             display: block;
@@ -72,43 +64,60 @@
         .art-placeholder { 
             position: absolute; 
             top: 50%; left: 50%; 
-            transform: translate(-50%, -50%); /* Keeps the music note perfectly centered */
+            transform: translate(-50%, -50%);
             font-size: 3rem; 
             opacity: 0.2; 
             margin: 0;
         }
-        
+
         .meta-container {
             display: flex;
             flex-direction: column;
-            gap: 2px;
-            margin-bottom: 10px;
+            gap: 1px;
+            margin-bottom: 4px;
+        }
+
+        /* TRUE SCROLLING MARQUEE USING CSS TRANSFORMS */
+        .marquee-container {
+            width: 100%;
+            overflow: hidden;
+            white-space: nowrap;
+            position: relative;
         }
         
-        h2 { 
+        .marquee-inner {
+            display: inline-block;
+            white-space: nowrap;
+            will-change: transform;
+        }
+
+        @keyframes marquee-scroll {
+            0%, 10% { transform: translateX(0); }         /* Pause for 10% of the loop at the beginning */
+            90%, 100% { transform: translateX(var(--scroll-distance)); } /* Pause for 10% of the loop at the end */
+        }
+
+        .marquee-inner.is-long {
+            animation: marquee-scroll var(--scroll-duration) linear infinite;
+        }
+
+        h2.marquee-inner { 
             margin: 0 0 2px 0; 
             font-size: 1.5rem; 
             font-weight: 700;
             color: #fff; 
             line-height: 1.2; 
             padding-bottom: 2px; 
-            display: -webkit-box;
-            -webkit-line-clamp: 1; 
-            -webkit-box-orient: vertical;
-            overflow: visible; 
         }
-        .track-sub { 
+        
+        .track-sub.marquee-inner { 
             margin: 0; 
             font-size: 1.05rem; 
             color: #aaa; 
             font-weight: 500; 
-            white-space: nowrap; 
-            overflow: hidden; 
-            text-overflow: ellipsis; 
+            line-height: 1.2;
         }
 
-        .progress-panel { margin-bottom: 12px; width: 100%; pointer-events: none; }
-
+        .progress-panel { margin-bottom: 4px; width: 100%; pointer-events: none; }
         .track-bar { 
             width: 100%; 
             height: {{TRACK_BAR_HEIGHT}}; 
@@ -130,7 +139,7 @@
             font-variant-numeric: tabular-nums; 
         }
 
-        .controls { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
+        .controls { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 4px; }
         
         button { 
             background: #212121; 
@@ -150,24 +159,11 @@
         .btn-primary { background: {{ACCENT_COLOR}}; border: none; flex: 1.3; font-size: 0.95rem; }
         
         .vol-panel { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; width: 100%; }
-
-        /* ... (keep .btn-vol as it is) ... */
-
-        .bar-container { 
-            flex-grow: 1; 
-            margin: 0 8px; /* Forces exactly 18px of unbreakable space on left and right */
-            background: #212121; 
-            height: 8px; 
-            border-radius: 4px; 
-            overflow: hidden; 
-            position: relative; 
-        }
-                
-        /* SMALLER VOLUME BUTTONS */
+        
         .btn-vol { 
             background: #212121; 
             color: #fff; 
-            width: 38px;  /* Shrunk from 44px */
+            width: 38px; 
             height: 38px; 
             min-height: 38px;
             padding: 0; 
@@ -180,15 +176,20 @@
             flex: none;
         }
         .btn-vol:active { background: #333; transform: scale(0.9); }
+        .bar-container { 
+            flex-grow: 1; 
+            margin: 0 18px; 
+            background: #212121; 
+            height: 8px; 
+            border-radius: 4px; 
+            overflow: hidden; 
+            position: relative; 
+        }
         .bar-fill { background: {{ACCENT_COLOR}}; height: 100%; width: 50%; transition: width 0.15s ease-out; }
 
         @media (max-height: 600px) {
-            .card { padding: 12px; }
-            .art-box { margin: 0 auto 10px auto; }
-            h2 { font-size: 1.3rem; }
-            .track-sub { font-size: 0.95rem; }
-            .progress-panel { margin-bottom: 10px; }
-            .controls { margin-bottom: 10px; }
+            .card { padding: 8px 12px; }
+            .art-box { max-height: 35vh; }
         }
     </style>
 </head>
@@ -198,10 +199,23 @@
             <span class="art-placeholder" id="art-ph">🎵</span>
         </div>
 
-        <h2 id="title">YouTube Music</h2>
+        <div class="marquee-container">
+            <h2 id="title-wrap" class="marquee-inner">
+                <span id="title">YouTube Music</span><span id="title-clone" style="padding-left: 60px;"></span>
+            </h2>
+        </div>
+        
         <div class="meta-container">
-            <div id="artist" class="track-sub">Connecting...</div>
-            <div id="album" class="track-sub"></div>
+            <div class="marquee-container">
+                <div id="artist-wrap" class="track-sub marquee-inner">
+                    <span id="artist">Connecting...</span><span id="artist-clone" style="padding-left: 60px;"></span>
+                </div>
+            </div>
+            <div class="marquee-container">
+                <div id="album-wrap" class="track-sub marquee-inner">
+                    <span id="album"></span><span id="album-clone" style="padding-left: 60px;"></span>
+                </div>
+            </div>
         </div>
 
         <div class="progress-panel">
@@ -234,14 +248,13 @@
     <script>
         let isSending = false;
         let currentArtwork = "";
+        let activeSongSignature = "";
 
-        // Timing / state
-        let state = 'IDLE'; // 'IDLE' | 'PLAYING' | 'PAUSED'
+        let state = 'IDLE'; 
         let currentDuration = 0;
         let lastKnownElapsed = 0;
         let playStartTime = 0;
 
-        // Legacy compat
         let serverElapsed = 0;
         let isPaused = true;
         let lastServerSync = performance.now();
@@ -266,6 +279,50 @@
             return elapsed >= 0 && elapsed <= duration;
         }
 
+        function setupMarquee(prefix, text) {
+            const wrap = document.getElementById(prefix + '-wrap');
+            const mainText = document.getElementById(prefix);
+            const cloneText = document.getElementById(prefix + '-clone');
+
+            const safeText = text || "";
+            mainText.innerText = safeText;
+            cloneText.innerText = safeText;
+            
+            wrap.classList.remove('is-long');
+            wrap.style.removeProperty('--scroll-distance');
+            wrap.style.removeProperty('--scroll-duration');
+            cloneText.style.display = 'none';
+
+            void wrap.offsetWidth;
+
+            // Measure just the text element itself against the container wrapper width
+            if (mainText.offsetWidth > wrap.parentElement.clientWidth) {
+                cloneText.style.display = 'inline';
+                
+                // Calculate exact distance to scroll so the loop wraps cleanly
+                const distance = -(mainText.offsetWidth + 60);
+                const duration = Math.max(6, Math.abs(distance) / 30);
+
+                wrap.style.setProperty('--scroll-distance', distance + 'px');
+                wrap.style.setProperty('--scroll-duration', duration + 's');
+                wrap.classList.add('is-long');
+            }
+        }
+
+        function updateMarquees(title, artist, album) {
+            const newSignature = `${title}|${artist}|${album}`;
+            
+            if (newSignature !== activeSongSignature) {
+                activeSongSignature = newSignature;
+
+                requestAnimationFrame(() => {
+                    setupMarquee('title', title);
+                    setupMarquee('artist', artist);
+                    setupMarquee('album', album);
+                });
+            }
+        }
+
         function animLoop() {
             if (state === 'PLAYING' && currentDuration > 0) {
                 const elapsedSincePlay = (performance.now() - playStartTime) / 1000;
@@ -287,9 +344,8 @@
                 let response = await fetch('/api/status');
                 let data = await response.json();
 
-                document.getElementById('title').innerText = data.title;
-                document.getElementById('artist').innerText = data.artist;
-                document.getElementById('album').innerText = data.album || '';
+                updateMarquees(data.title, data.artist, data.album || '');
+
                 document.getElementById('vol-bar').style.width = data.volume + "%";
 
                 let newIsPaused = data.isPaused !== undefined ? data.isPaused :
@@ -309,20 +365,17 @@
                 const isNowPaused = newIsPaused;
 
                 if (wasPaused && !isNowPaused) {
-                    // PAUSED/IDLE → PLAYING
                     lastKnownElapsed = clampElapsed(newElapsed, currentDuration);
                     playStartTime = performance.now();
                     lastServerSync = playStartTime;
                     state = 'PLAYING';
                 } else if (!wasPaused && isNowPaused) {
-                    // PLAYING → PAUSED
                     const elapsedSincePlay = (performance.now() - playStartTime) / 1000;
                     let finalElapsed = lastKnownElapsed + elapsedSincePlay;
                     finalElapsed = clampElapsed(finalElapsed, currentDuration);
                     lastKnownElapsed = finalElapsed;
                     state = 'PAUSED';
                 } else if (!wasPaused && !isNowPaused) {
-                    // PLAYING → PLAYING: simple drift correction
                     const elapsedSincePlay = (performance.now() - playStartTime) / 1000;
                     const currentEstimate = lastKnownElapsed + elapsedSincePlay;
 
@@ -334,7 +387,6 @@
                     }
                     state = 'PLAYING';
                 } else {
-                    // PAUSED → PAUSED or IDLE → IDLE
                     if (isValidElapsed(newElapsed, newDuration) &&
                         Math.abs(lastKnownElapsed - newElapsed) > 2.0) {
                         lastKnownElapsed = clampElapsed(newElapsed, currentDuration);
