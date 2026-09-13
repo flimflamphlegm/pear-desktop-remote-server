@@ -16,41 +16,66 @@
             flex-direction: column; 
             align-items: center; 
             justify-content: center; 
-            min-height: 100vh;
-            min-height: 100dvh;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden; /* Locks the page so it never scrolls */
         }
         .card { 
             background: {{CARD_BACKGROUND}}; 
-            padding: 24px 20px; 
+            padding: 16px; /* Tightened padding slightly to save vertical room */
             border-radius: 24px; 
             border: 1px solid #222; 
             box-shadow: 0 10px 40px rgba(0,0,0,0.8); 
-            width: 90%; 
+            width: 92%; 
             max-width: {{CARD_MAX_WIDTH}}; 
+            max-height: 96vh; /* Never allows the card to exceed the screen height */
+            max-height: 96dvh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; /* Distributes vertical space evenly */
             margin: auto;
         }
         
         .art-box { 
             width: 100%; 
-            aspect-ratio: 1 / 1;
-            max-height: {{ARTWORK_MAX_HEIGHT}};
+            max-height: 45vh; /* Caps the art so it leaves room for text and buttons */
+            position: relative; 
+            margin: 0 auto 10px auto; 
             background: #1a1a1a; 
-            border-radius: 16px; 
-            margin-bottom: 18px; 
+            border-radius: 14px; 
             overflow: hidden; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
             border: 1px solid #2a2a2a; 
+            flex-shrink: 1; /* Allows the art to shrink gracefully if the screen is super short */
         }
-        .art-box img { width: 100%; height: 100%; object-fit: cover; }
-        .art-placeholder { font-size: 3rem; opacity: 0.2; }
+        
+        /* The classic bulletproof square trick for old browsers */
+        .art-box::after {
+            content: "";
+            display: block;
+            padding-bottom: 100%; 
+        }
+
+        .art-box img { 
+            position: absolute; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            object-fit: cover; 
+        }
+        
+        .art-placeholder { 
+            position: absolute; 
+            top: 50%; left: 50%; 
+            transform: translate(-50%, -50%); /* Keeps the music note perfectly centered */
+            font-size: 3rem; 
+            opacity: 0.2; 
+            margin: 0;
+        }
         
         .meta-container {
             display: flex;
             flex-direction: column;
-            gap: 4px;
-            margin-bottom: 18px;
+            gap: 2px;
+            margin-bottom: 10px;
         }
         
         /* BUMPED UP TEXT SIZES */
@@ -73,7 +98,8 @@
             text-overflow: ellipsis; 
         }
 
-        .progress-panel { margin-bottom: 18px; width: 100%; pointer-events: none; }
+        .progress-panel { margin-bottom: 12px; width: 100%; pointer-events: none; }
+
         .track-bar { 
             width: 100%; 
             height: {{TRACK_BAR_HEIGHT}}; 
@@ -95,7 +121,7 @@
             font-variant-numeric: tabular-nums; 
         }
 
-        .controls { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 18px; }
+        .controls { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px; }
         
         /* SLIMMER BUTTONS */
         button { 
@@ -121,7 +147,7 @@
 
         .bar-container { 
             flex-grow: 1; 
-            margin: 0 18px; /* Forces exactly 18px of unbreakable space on left and right */
+            margin: 0 8px; /* Forces exactly 18px of unbreakable space on left and right */
             background: #212121; 
             height: 8px; 
             border-radius: 4px; 
@@ -150,7 +176,7 @@
 
         @media (max-height: 600px) {
             .card { padding: 12px; }
-            .art-box { max-height: 150px; margin-bottom: 10px; }
+            .art-box { margin: 0 auto 10px auto; }
             h2 { font-size: 1.3rem; }
             .track-sub { font-size: 0.95rem; }
             .progress-panel { margin-bottom: 10px; }
