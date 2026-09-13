@@ -241,18 +241,34 @@ class PearRemoteHandler(http.server.BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-  local_ip = get_local_ip()
-  print("==================================================")
-  print(f" Pear Remote Server running at: http://{local_ip}:{config.PORT}")
-  print("==================================================")
+    local_ip = get_local_ip()
+    print("==================================================")
+    print(f" Pear Remote Server running at: http://{local_ip}:{config.PORT}")
+    print("==================================================")
 
-  # Enable port reuse before binding to prevent [Errno 48] on restart
-  http.server.HTTPServer.allow_reuse_address = True
+    # Enable port reuse before binding to prevent [Errno 48] on restart
+    http.server.HTTPServer.allow_reuse_address = True
 
-  try:
-    server = http.server.HTTPServer(
-        (config.HOST, config.PORT), PearRemoteHandler
-    )
-    server.serve_forever()
-  except KeyboardInterrupt:
-    print("\nServer stopped.")
+    while True:
+        server = None
+        try:
+            server = http.server.HTTPServer(
+                (config.HOST, config.PORT), PearRemoteHandler
+            )
+            # This will run continuously until a sleep/wake network event breaks it
+            server.serve_forever() 
+        except KeyboardInterrupt:
+            print("\nServer stopped manually.")
+            if server:
+                server.server_close()
+            break  # Exit the loop entirely if you press Ctrl+C
+        except Exception as e:
+            # Catch OS/socket errors caused by Mac sleep cycle
+            print(f"\n[Network Interruption] Server crashed: {e}")
+            print("Waiting 5 seconds for network to recover before restarting...")
+            if server:
+                try:
+                    server.server_close() # Free up the port
+                except Exception:
+                    pass
+            time.sleep(5) # Give macOS time to re-establish the network interface
