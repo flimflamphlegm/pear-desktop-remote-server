@@ -22,30 +22,37 @@
         }
         .card { 
             background: {{CARD_BACKGROUND}}; 
-            padding: 16px; /* Tightened padding slightly to save vertical room */
-            border-radius: 24px; 
+            padding: 10px 14px;
+            border-radius: 20px; 
             border: 1px solid #222; 
             box-shadow: 0 10px 40px rgba(0,0,0,0.8); 
-            width: 92%; 
+            width: 94%; 
             max-width: {{CARD_MAX_WIDTH}}; 
-            max-height: 96vh; /* Never allows the card to exceed the screen height */
-            max-height: 96dvh;
+            max-height: 99vh; 
+            max-height: 99dvh;
             display: flex;
             flex-direction: column;
-            justify-content: space-between; /* Distributes vertical space evenly */
+            justify-content: flex-start;
             margin: auto;
         }
         
         .art-box { 
             width: 100%; 
-            max-height: 45vh; /* Caps the art so it leaves room for text and buttons */
+            max-height: 42vh;
             position: relative; 
-            margin: 0 auto 10px auto; 
+            margin: 0 auto 4px auto; 
             background: #1a1a1a; 
-            border-radius: 14px; 
+            border-radius: 12px; 
             overflow: hidden; 
             border: 1px solid #2a2a2a; 
-            flex-shrink: 1; /* Allows the art to shrink gracefully if the screen is super short */
+            flex-shrink: 1; 
+        }
+
+        .meta-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            margin-bottom: 4px; 
         }
         
         /* The classic bulletproof square trick for old browsers */
@@ -78,19 +85,21 @@
             margin-bottom: 10px;
         }
         
-        /* BUMPED UP TEXT SIZES */
         h2 { 
-            margin: 0 0 4px 0; 
-            font-size: 1.55rem; /* Much larger title */
+            margin: 0 0 2px 0; 
+            font-size: 1.5rem; 
             font-weight: 700;
             color: #fff; 
-            white-space: nowrap; 
-            overflow: hidden; 
-            text-overflow: ellipsis; 
+            line-height: 1.2; 
+            padding-bottom: 2px; 
+            display: -webkit-box;
+            -webkit-line-clamp: 1; 
+            -webkit-box-orient: vertical;
+            overflow: visible; 
         }
         .track-sub { 
             margin: 0; 
-            font-size: 1.05rem; /* Larger artist/album */
+            font-size: 1.05rem; 
             color: #aaa; 
             font-weight: 500; 
             white-space: nowrap; 
@@ -114,21 +123,20 @@
         .time-labels { 
             display: flex; 
             justify-content: space-between; 
-            font-size: 0.85rem; /* Larger track times */
+            font-size: 0.85rem; 
             font-weight: 600;
             color: #888; 
             margin-top: 8px; 
             font-variant-numeric: tabular-nums; 
         }
 
-        .controls { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px; }
+        .controls { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
         
-        /* SLIMMER BUTTONS */
         button { 
             background: #212121; 
             color: #fff; 
             border: 1px solid #333; 
-            padding: 10px 12px; /* Reduced vertical padding */
+            padding: 10px 12px; 
             font-size: 0.9rem; 
             font-weight: bold; 
             border-radius: 30px; 
