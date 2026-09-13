@@ -65,6 +65,7 @@ def get_song_info() -> dict:
       return {
           "title": data.get("title", "YouTube Music"),
           "artist": data.get("artist", "Now Playing"),
+          "album": data.get("album", ""),
           "artwork": data.get("imageSrc", "") or data.get("cover", ""),
           "isPaused": data.get("isPaused", False),
           "elapsed": data.get("elapsedSeconds", 0)
@@ -77,6 +78,7 @@ def get_song_info() -> dict:
   return {
       "title": "YouTube Music",
       "artist": "Pear Desktop Session",
+      "album": "",
       "artwork": "",
       "isPaused": True,
       "elapsed": 0,

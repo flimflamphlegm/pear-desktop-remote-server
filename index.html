@@ -45,6 +45,21 @@
         }
         .art-box img { width: 100%; height: 100%; object-fit: cover; }
         .art-placeholder { font-size: 3rem; opacity: 0.2; }
+        .meta-container {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            margin-bottom: 14px;
+        }
+        .track-sub { 
+            margin: 0; 
+            font-size: 0.85rem; 
+            color: #aaa; 
+            font-weight: 400; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+        }
 
         h2 { margin: 0 0 4px 0; font-size: 1.1rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         h3 { margin: 0 0 14px 0; font-size: 0.85rem; color: #aaa; font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -99,7 +114,7 @@
         .btn-vol:active { background: #333; transform: scale(0.9); }
         .bar-container { flex-grow: 1; background: #212121; height: 8px; border-radius: 4px; overflow: hidden; position: relative; }
         .bar-fill { background: {{ACCENT_COLOR}}; height: 100%; width: 50%; transition: width 0.15s ease-out; }
-        .vol-label { font-size: 0.75rem; color: #888; margin-bottom: 4px; display: block; text-align: center; }
+        /* .vol-label { font-size: 0.75rem; color: #888; margin-bottom: 4px; display: block; text-align: center; } */
 
         @media (max-height: 600px) {
             .card { padding: 12px; }
@@ -117,8 +132,11 @@
         </div>
 
         <h2 id="title">YouTube Music</h2>
-        <h3 id="artist">Connecting...</h3>
-        
+        <div class="meta-container">
+            <div id="artist" class="track-sub">Connecting...</div>
+            <div id="album" class="track-sub"></div>
+        </div>
+
         <div class="progress-panel">
             <div class="track-bar" id="track-bar">
                 <div class="track-fill" id="track-fill"></div>
@@ -136,7 +154,7 @@
         </div>
         
         <div>
-            <span class="vol-label">Volume (<span id="vol-txt">50</span>%)</span>
+            <!-- <span class="vol-label">Volume (<span id="vol-txt">50</span>%)</span> -->
             <div class="vol-panel">
                 <button class="btn-vol" onclick="sendControl('vol_down')">−</button>
                 <div class="bar-container">
@@ -183,8 +201,9 @@
                 
                 document.getElementById('title').innerText = data.title;
                 document.getElementById('artist').innerText = data.artist;
+                document.getElementById('album').innerText = data.album || ''
                 document.getElementById('vol-bar').style.width = data.volume + "%";
-                document.getElementById('vol-txt').innerText = data.volume;
+                //document.getElementById('vol-txt').innerText = data.volume;
                 
                 isPaused = data.isPaused;
                 document.getElementById('play-btn').innerText = isPaused ? "Play ▶" : "Pause ❚❚";
