@@ -61,6 +61,7 @@
             text-overflow: ellipsis; 
         }
 
+
         h2 { margin: 0 0 4px 0; font-size: 1.1rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         h3 { margin: 0 0 14px 0; font-size: 0.85rem; color: #aaa; font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
@@ -76,6 +77,7 @@
         }
         .track-fill { background: {{ACCENT_COLOR}}; height: 100%; width: 0%; transition: none; }
         .time-labels { display: flex; justify-content: space-between; font-size: 0.72rem; color: #888; margin-top: 5px; font-variant-numeric: tabular-nums; }
+
 
         .controls { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 18px; }
         button { 
@@ -116,6 +118,7 @@
         .bar-fill { background: {{ACCENT_COLOR}}; height: 100%; width: 50%; transition: width 0.15s ease-out; }
         /* .vol-label { font-size: 0.75rem; color: #888; margin-bottom: 4px; display: block; text-align: center; } */
 
+
         @media (max-height: 600px) {
             .card { padding: 12px; }
             .art-box { max-height: 150px; margin-bottom: 10px; }
@@ -131,11 +134,13 @@
             <span class="art-placeholder" id="art-ph">🎵</span>
         </div>
 
+
         <h2 id="title">YouTube Music</h2>
         <div class="meta-container">
             <div id="artist" class="track-sub">Connecting...</div>
             <div id="album" class="track-sub"></div>
         </div>
+
 
         <div class="progress-panel">
             <div class="track-bar" id="track-bar">
@@ -146,6 +151,7 @@
                 <span id="time-duration">0:00</span>
             </div>
         </div>
+
 
         <div class="controls">
             <button onclick="sendControl('prev')">❮ Prev</button>
@@ -165,11 +171,19 @@
         </div>
     </div>
 
+
     <script>
         let isSending = false;
         let currentArtwork = "";
-        let serverElapsed = 0;
+
+        // Timing / state
+        let state = 'IDLE'; // 'IDLE' | 'PLAYING' | 'PAUSED'
         let currentDuration = 0;
+        let lastKnownElapsed = 0;
+        let playStartTime = 0;
+
+        // Legacy compat
+        let serverElapsed = 0;
         let isPaused = true;
         let lastServerSync = performance.now();
 
@@ -180,14 +194,29 @@
             return m + ":" + (s < 10 ? "0" : "") + s;
         }
 
-        // 60fps local interpolation loop using requestAnimationFrame
+        function clampElapsed(elapsed, duration) {
+            if (duration <= 0) return 0;
+            if (elapsed > duration) return duration;
+            if (elapsed < 0) return 0;
+            return elapsed;
+        }
+
+        function isValidElapsed(elapsed, duration) {
+            if (!Number.isFinite(elapsed) || !Number.isFinite(duration)) return false;
+            if (duration <= 0) return true;
+            return elapsed >= 0 && elapsed <= duration;
+        }
+
         function animLoop() {
-            if (!isPaused && currentDuration > 0) {
-                const elapsedSinceSync = (performance.now() - lastServerSync) / 1000;
-                let estimatedElapsed = Math.min(serverElapsed + elapsedSinceSync, currentDuration);
-                
-                document.getElementById('time-elapsed').innerText = formatTime(estimatedElapsed);
-                let pct = (estimatedElapsed / currentDuration) * 100;
+            if (state === 'PLAYING' && currentDuration > 0) {
+                const elapsedSincePlay = (performance.now() - playStartTime) / 1000;
+                let currentElapsed = lastKnownElapsed + elapsedSincePlay;
+
+                if (currentElapsed > currentDuration) currentElapsed = currentDuration;
+                if (currentElapsed < 0) currentElapsed = 0;
+
+                document.getElementById('time-elapsed').innerText = formatTime(currentElapsed);
+                let pct = (currentElapsed / currentDuration) * 100;
                 document.getElementById('track-fill').style.width = Math.min(100, Math.max(0, pct)) + "%";
             }
             requestAnimationFrame(animLoop);
@@ -198,25 +227,70 @@
             try {
                 let response = await fetch('/api/status');
                 let data = await response.json();
-                
+
                 document.getElementById('title').innerText = data.title;
                 document.getElementById('artist').innerText = data.artist;
-                document.getElementById('album').innerText = data.album || ''
+                document.getElementById('album').innerText = data.album || '';
                 document.getElementById('vol-bar').style.width = data.volume + "%";
-                //document.getElementById('vol-txt').innerText = data.volume;
-                
-                isPaused = data.isPaused;
-                document.getElementById('play-btn').innerText = isPaused ? "Play ▶" : "Pause ❚❚";
 
-                serverElapsed = data.elapsed || 0;
-                currentDuration = data.duration || 0;
-                lastServerSync = performance.now();
+                let newIsPaused = data.isPaused !== undefined ? data.isPaused :
+                                  (data.is_playing !== undefined ? !data.is_playing : true);
+                let newElapsed = data.elapsed || 0;
+                let newDuration = data.duration || 0;
 
-                // Snap fallback instantly
-                document.getElementById('time-elapsed').innerText = formatTime(serverElapsed);
+                serverElapsed = newElapsed;
+                isPaused = newIsPaused;
+
+                if (newDuration !== currentDuration) {
+                    currentDuration = newDuration;
+                    lastKnownElapsed = clampElapsed(lastKnownElapsed, currentDuration);
+                }
+
+                const wasPaused = state !== 'PLAYING';
+                const isNowPaused = newIsPaused;
+
+                if (wasPaused && !isNowPaused) {
+                    // PAUSED/IDLE → PLAYING
+                    lastKnownElapsed = clampElapsed(newElapsed, currentDuration);
+                    playStartTime = performance.now();
+                    lastServerSync = playStartTime;
+                    state = 'PLAYING';
+                } else if (!wasPaused && isNowPaused) {
+                    // PLAYING → PAUSED
+                    const elapsedSincePlay = (performance.now() - playStartTime) / 1000;
+                    let finalElapsed = lastKnownElapsed + elapsedSincePlay;
+                    finalElapsed = clampElapsed(finalElapsed, currentDuration);
+                    lastKnownElapsed = finalElapsed;
+                    state = 'PAUSED';
+                } else if (!wasPaused && !isNowPaused) {
+                    // PLAYING → PLAYING: simple drift correction
+                    const elapsedSincePlay = (performance.now() - playStartTime) / 1000;
+                    const currentEstimate = lastKnownElapsed + elapsedSincePlay;
+
+                    if (isValidElapsed(newElapsed, newDuration) &&
+                        Math.abs(currentEstimate - newElapsed) > 3.0) {
+                        lastKnownElapsed = clampElapsed(newElapsed, currentDuration);
+                        playStartTime = performance.now();
+                        lastServerSync = playStartTime;
+                    }
+                    state = 'PLAYING';
+                } else {
+                    // PAUSED → PAUSED or IDLE → IDLE
+                    if (isValidElapsed(newElapsed, newDuration) &&
+                        Math.abs(lastKnownElapsed - newElapsed) > 2.0) {
+                        lastKnownElapsed = clampElapsed(newElapsed, currentDuration);
+                    }
+                    state = isNowPaused ? 'PAUSED' : (currentDuration > 0 ? 'PLAYING' : 'IDLE');
+                }
+
+                document.getElementById('play-btn').innerText = isNowPaused ? "Play ▶" : "Pause ❚❚";
                 document.getElementById('time-duration').innerText = formatTime(currentDuration);
-                let pct = currentDuration > 0 ? (serverElapsed / currentDuration) * 100 : 0;
-                document.getElementById('track-fill').style.width = Math.min(100, Math.max(0, pct)) + "%";
+
+                if (isNowPaused) {
+                    document.getElementById('time-elapsed').innerText = formatTime(lastKnownElapsed);
+                    let pct = currentDuration > 0 ? (lastKnownElapsed / currentDuration) * 100 : 0;
+                    document.getElementById('track-fill').style.width = Math.min(100, Math.max(0, pct)) + "%";
+                }
 
                 if (data.artwork && data.artwork !== currentArtwork) {
                     currentArtwork = data.artwork;
@@ -239,6 +313,9 @@
                     updateStatus();
                     isSending = false;
                 }, 200);
+            }).catch(err => {
+                console.error("Control error:", err);
+                isSending = false;
             });
         }
 

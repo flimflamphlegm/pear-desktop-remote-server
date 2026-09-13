@@ -11,6 +11,13 @@ import config
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+# Track last known good progress per track key
+_last_good_progress = {}  # key -> {"elapsed": float, "duration": float}
+
+def _track_key(info: dict) -> str:
+    # Use title+artist+duration as a simple key
+    return f"{info.get('title', '')}|{info.get('artist', '')}|{info.get('duration', 0)}"
+
 
 def get_local_ip() -> str:
   s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -57,33 +64,103 @@ def pear_api_post(endpoint: str) -> bool:
 
 
 def get_song_info() -> dict:
-  url = f"{config.PEAR_API_BASE}/song-info"
-  try:
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-    with urllib.request.urlopen(req, timeout=config.API_TIMEOUT) as resp:
-      data = json.loads(resp.read().decode("utf-8"))
-      return {
-          "title": data.get("title", "YouTube Music"),
-          "artist": data.get("artist", "Now Playing"),
-          "album": data.get("album", ""),
-          "artwork": data.get("imageSrc", "") or data.get("cover", ""),
-          "isPaused": data.get("isPaused", False),
-          "elapsed": data.get("elapsedSeconds", 0)
-          or data.get("songProgress", 0),
-          "duration": data.get("songDuration", 0) or data.get("duration", 0),
-      }
-  except Exception:
-    pass
+    global _last_good_progress
 
-  return {
-      "title": "YouTube Music",
-      "artist": "Pear Desktop Session",
-      "album": "",
-      "artwork": "",
-      "isPaused": True,
-      "elapsed": 0,
-      "duration": 0,
-  }
+    url = f"{config.PEAR_API_BASE}/song-info"
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=config.API_TIMEOUT) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+
+            title = data.get("title", "YouTube Music")
+            artist = data.get("artist", "Now Playing")
+            album = data.get("album", "")
+            artwork = data.get("imageSrc", "") or data.get("cover", "")
+            is_paused = data.get("isPaused", False)
+
+            elapsed = data.get("elapsedSeconds", 0) or data.get("songProgress", 0)
+            duration = data.get("songDuration", 0) or data.get("duration", 0)
+
+            # Normalize types
+            try:
+                elapsed = float(elapsed)
+            except (TypeError, ValueError):
+                elapsed = 0.0
+
+            try:
+                duration = float(duration)
+            except (TypeError, ValueError):
+                duration = 0.0
+
+            # Basic sanity
+            if duration <= 0 or duration > 3 * 3600:  # > 3 hours likely bogus
+                elapsed = 0.0
+                duration = 0.0
+
+            if duration > 0:
+                if elapsed < 0:
+                    elapsed = 0.0
+                elif elapsed > duration:
+                    elapsed = duration
+
+            # Build a key for this track
+            info = {
+                "title": title,
+                "artist": artist,
+                "album": album,
+                "artwork": artwork,
+                "isPaused": is_paused,
+                "elapsed": elapsed,
+                "duration": duration,
+            }
+            key = _track_key(info)
+
+            # Heuristic: if elapsed == duration but previously we were far from end,
+            # treat this as invalid and keep last good elapsed.
+            if key in _last_good_progress:
+                last = _last_good_progress[key]
+                last_elapsed = last["elapsed"]
+                last_duration = last["duration"]
+
+                # If duration changed significantly, treat as new track state; reset
+                if abs(last_duration - duration) > 5:
+                    _last_good_progress[key] = {"elapsed": elapsed, "duration": duration}
+                else:
+                    # Suspicious "at end" while we were not near end before
+                    near_end_before = (last_duration - last_elapsed) < 5.0
+                    now_at_end = (duration - elapsed) < 1.0
+
+                    if now_at_end and not near_end_before:
+                        # Don't trust this "at end"; keep last good elapsed
+                        elapsed = last_elapsed
+                    else:
+                        # Looks consistent; update last good
+                        _last_good_progress[key] = {"elapsed": elapsed, "duration": duration}
+            else:
+                # First time seeing this track state; store as baseline
+                _last_good_progress[key] = {"elapsed": elapsed, "duration": duration}
+
+            return {
+                "title": title,
+                "artist": artist,
+                "album": album,
+                "artwork": artwork,
+                "isPaused": is_paused,
+                "elapsed": elapsed,
+                "duration": duration,
+            }
+    except Exception:
+        pass
+
+    return {
+        "title": "YouTube Music",
+        "artist": "Pear Desktop Session",
+        "album": "",
+        "artwork": "",
+        "isPaused": True,
+        "elapsed": 0,
+        "duration": 0,
+    }
 
 
 def render_html_template() -> str:
