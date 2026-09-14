@@ -6,14 +6,9 @@ import time
 from . import config
 
 _volume_cache: dict[str, float | int] = {"value": config.VOLUME_FALLBACK_PERCENT, "ts": 0.0}
-_VOLUME_CACHE_TTL_SECONDS = 2.0
 
 
-def get_system_volume(force: bool = False) -> int:
-    """Return the current macOS output volume, cached briefly to avoid repeated osascript spawns."""
-    now = time.monotonic()
-    if not force and (now - _volume_cache["ts"]) < _VOLUME_CACHE_TTL_SECONDS:
-        return _volume_cache["value"]
+def _read_volume_from_system() -> int:
     try:
         result = subprocess.run(
             ["osascript", "-e", "output volume of (get volume settings)"],
@@ -22,14 +17,24 @@ def get_system_volume(force: bool = False) -> int:
             timeout=config.OSASCRIPT_TIMEOUT_SECONDS,
             check=False,
         )
-        value = max(0, min(100, int(result.stdout.strip() or config.VOLUME_FALLBACK_PERCENT)))
+        return max(0, min(100, int(result.stdout.strip() or config.VOLUME_FALLBACK_PERCENT)))
     except (OSError, ValueError, subprocess.SubprocessError):
-        value = config.VOLUME_FALLBACK_PERCENT
-    _volume_cache["value"] = value
+        return config.VOLUME_FALLBACK_PERCENT
+
+
+def get_system_volume(force: bool = False) -> int:
+    """Return the current macOS output volume, only re-checking the OS periodically."""
+    now = time.monotonic()
+    if not force and (now - _volume_cache["ts"]) < config.VOLUME_POLL_INTERVAL_SECONDS:
+        return _volume_cache["value"]
+    fresh_value = _read_volume_from_system()
+    _volume_cache["value"] = fresh_value
     _volume_cache["ts"] = now
-    return value
+    return fresh_value
+
 
 def set_system_volume(volume: int) -> None:
+    """Set macOS output volume, ignoring failures."""
     volume = max(0, min(100, int(volume)))
     try:
         subprocess.run(
@@ -44,6 +49,7 @@ def set_system_volume(volume: int) -> None:
 
 
 def adjust_system_volume(delta: int) -> int:
+    """Adjust system volume by delta and return the resulting value."""
     new_volume = max(0, min(100, get_system_volume() + delta))
     set_system_volume(new_volume)
     return new_volume
