@@ -42,6 +42,9 @@ class PearRemoteHandler(http.server.BaseHTTPRequestHandler):
             self._send_json(info)
         elif path.startswith("/control/"):
             action = path.rsplit("/", 1)[-1]
-            self._send_text("OK" if controls.dispatch(action) else f"Unknown action: {action}", 200 if controls.dispatch(action) else 400)
+            recognized = controls.dispatch(action)
+            status = 200 if recognized else 400
+            body = "OK" if recognized else f"Unknown action: {action}"
+            self._send_text(body, status)
         else:
             self._send_body(templating.render_index_html().encode("utf-8"), "text/html; charset=utf-8")
