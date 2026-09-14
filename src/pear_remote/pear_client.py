@@ -86,6 +86,28 @@ def fetch_now_playing() -> dict:
     }
 
 
+def fetch_artwork() -> tuple[bytes, str] | None:
+    """Fetch Pear Desktop artwork and return (bytes, content type)."""
+    info = fetch_now_playing()
+    artwork_url = info.get("artwork", "")
+    if not artwork_url:
+        return None
+
+    try:
+        request = urllib.request.Request(
+            artwork_url,
+            headers={"User-Agent": "Mozilla/5.0", "Accept": "image/*"},
+        )
+        with urllib.request.urlopen(request, timeout=config.API_TIMEOUT) as response:
+            content_type = response.headers.get_content_type() or "image/jpeg"
+            if not content_type.startswith("image/"):
+                content_type = "image/jpeg"
+            return response.read(), content_type
+    except OSError as error:
+        LOGGER.debug("Unable to fetch artwork: %s", error)
+        return None
+
+
 def send_command(endpoint: str) -> bool:
     """POST a playback command to Pear Desktop."""
     try:
