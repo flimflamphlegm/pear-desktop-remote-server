@@ -125,7 +125,7 @@
                 playStartTime = performance.now();
                 state = 'PLAYING';
             } else if (wasPlaying && isPaused) {
-                lastKnownElapsed = clampElapsed(lastKnownElapsed + (performance.now() - playStartTime) / 1000, duration);
+                lastKnownElapsed = isValidElapsed(elapsed, duration) ? elapsed : clampElapsed(lastKnownElapsed + (performance.now() - playStartTime) / 1000, duration);
                 state = 'PAUSED';
             } else if (wasPlaying && !isPaused && isValidElapsed(elapsed, duration)) {
                 const estimate = lastKnownElapsed + (performance.now() - playStartTime) / 1000;
