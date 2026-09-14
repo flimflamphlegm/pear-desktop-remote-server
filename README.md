@@ -4,7 +4,7 @@ A small macOS web remote for Pear Desktop / YouTube Music.
 
 ## Demo
 
-![Pear Desktop Remote demo](docs/assets/demo.jpeg)
+![Pear Desktop Remote demo](image.jpeg)
 
 ## Run manually
 
@@ -12,7 +12,7 @@ A small macOS web remote for Pear Desktop / YouTube Music.
 python3 server.py
 ```
 
-`server.py` remains a compatibility entry point. New installations use `main.py`.
+`server.py` is the root entry point and loads the application package from `src/pear_remote/`.
 
 Open the printed LAN URL on a phone or another device on the same network.
 
@@ -30,9 +30,8 @@ Logs are written to `ytremote.log` and `ytremote.err` in the project directory.
 
 ```text
 .
-├── docs/assets/demo.jpeg
+├── image.jpeg
 ├── install.sh
-├── main.py
 ├── server.py
 ├── src/pear_remote/
 │   ├── config.py
