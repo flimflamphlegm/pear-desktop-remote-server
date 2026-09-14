@@ -2,6 +2,10 @@
 
 A small macOS web remote for Pear Desktop / YouTube Music.
 
+## Demo
+
+![Pear Desktop Remote demo](image.jpeg)
+
 ## Run manually
 
 ```sh
