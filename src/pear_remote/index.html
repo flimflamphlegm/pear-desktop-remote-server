@@ -6,31 +6,42 @@
     <style>
         * { box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: {{BACKGROUND_COLOR}}; color: #fff; text-align: center; margin: 0; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; height: 100dvh; overflow: hidden; }
-        .card { background: {{CARD_BACKGROUND}}; padding: 10px 14px; border-radius: 20px; border: 1px solid #222; box-shadow: 0 10px 40px rgba(0,0,0,0.8); width: 94%; max-width: {{CARD_MAX_WIDTH}}; max-height: 99vh; max-height: 99dvh; display: flex; flex-direction: column; justify-content: flex-start; margin: auto; }
-        .art-box { width: 100%; max-height: min({{ARTWORK_MAX_HEIGHT}}, 42vh); position: relative; margin: 0 auto 4px auto; background: #1a1a1a; border-radius: 12px; overflow: hidden; border: 1px solid #2a2a2a; flex-shrink: 1; }
+        .card { background: {{CARD_BACKGROUND}}; padding: 10px 14px; border-radius: 20px; border: 1px solid #222; box-shadow: 0 10px 40px rgba(0,0,0,0.8); width: 94%; max-width: {{CARD_MAX_WIDTH}}; max-height: 99vh; max-height: 99dvh; min-height: 0; display: flex; flex-direction: column; justify-content: flex-start; margin: auto; }
+        .art-box { width: 100%; flex: 1 1 auto; min-height: 0; max-height: min({{ARTWORK_MAX_HEIGHT}}, 42vh); position: relative; margin: 0 auto 4px auto; background: #1a1a1a; border-radius: 12px; overflow: hidden; border: 1px solid #2a2a2a; }
         .art-box::after { content: ""; display: block; padding-bottom: 100%; }
         .art-box img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
         .art-placeholder { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 3rem; opacity: 0.2; margin: 0; }
-        .meta-container { display: flex; flex-direction: column; gap: 4px; margin-bottom: 4px; }
+        .meta-container { display: flex; flex-direction: column; gap: 4px; margin-bottom: 4px; flex-shrink: 0; }
         .marquee-container { width: 100%; overflow: hidden; white-space: nowrap; position: relative; }
         .marquee-inner { display: inline-block; white-space: nowrap; will-change: transform; }
         @keyframes marquee-scroll { 0%, 10% { transform: translateX(0); } 90%, 100% { transform: translateX(var(--scroll-distance)); } }
         .marquee-inner.is-long { animation: marquee-scroll var(--scroll-duration) linear infinite; }
         h2.marquee-inner { margin: 0 0 7px; font-size: 1.5rem; font-weight: 700; color: #fff; line-height: 1.2; padding-bottom: 2px; }
         .track-sub.marquee-inner { margin: 0; font-size: 1.05rem; color: #aaa; font-weight: 500; line-height: 1.2; }
-        .progress-panel { margin-bottom: 4px; width: 100%; pointer-events: none; }
+        .progress-panel { margin-bottom: 4px; width: 100%; pointer-events: none; flex-shrink: 0; }
         .track-bar { width: 100%; height: {{TRACK_BAR_HEIGHT}}; background: #282828; border-radius: 4px; overflow: hidden; }
         .track-fill { background: {{ACCENT_COLOR}}; height: 100%; width: 0%; }
         .time-labels { display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600; color: #888; margin-top: 8px; font-variant-numeric: tabular-nums; }
-        .controls { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 4px; }
+        .controls { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 4px; flex-shrink: 0; }
         button { background: #212121; color: #fff; border: 1px solid #333; padding: 10px 12px; font-size: 0.9rem; font-weight: bold; border-radius: 30px; cursor: pointer; touch-action: manipulation; flex: 1; min-height: {{BUTTON_MIN_HEIGHT}}; transition: transform 0.1s, background-color 0.2s; }
         button:active { transform: scale(0.95); background: #333; }
         .btn-primary { background: {{ACCENT_COLOR}}; border: none; flex: 1.3; font-size: 0.95rem; }
-        .vol-panel { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; width: 100%; }
+        .vol-panel { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; width: 100%; flex-shrink: 0; }
         .btn-vol { background: #212121; color: #fff; width: 38px; height: 38px; min-height: 38px; padding: 0; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 1px solid #333; flex: none; }
         .bar-container { flex-grow: 1; margin: 0 18px; background: #212121; height: 8px; border-radius: 4px; overflow: hidden; }
         .bar-fill { background: {{ACCENT_COLOR}}; height: 100%; width: 50%; transition: width 0.15s ease-out; }
-        @media (max-height: 600px) { .card { padding: 8px 12px; } .art-box { max-height: min({{ARTWORK_MAX_HEIGHT}}, 35vh); } }
+        @media (max-height: 600px) {
+            .card { padding: 8px 12px; }
+            .art-box { max-height: 32vh; }
+            h2.marquee-inner { margin-bottom: 5px; }
+        }
+        @media (max-height: 480px) {
+            .card { padding: 6px 10px; }
+            .art-box { max-height: 25vh; }
+            h2.marquee-inner { margin-bottom: 4px; }
+            .time-labels { margin-top: 4px; }
+            button { padding-top: 7px; padding-bottom: 7px; }
+        }
     </style>
 </head>
 <body>
