@@ -1,2 +1,6 @@
-__pycache__
-.DS_store
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.DS_Store
+ytremote.log
+ytremote.err
