@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
-"""Backward-compatible entry point; use main.py for new installations."""
+"""Root entry point for the Pear Desktop Remote server."""
 
-from main import main
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).with_name("src")))
+
+from pear_remote.main import main
 
 
 if __name__ == "__main__":
