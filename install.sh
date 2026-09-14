@@ -23,6 +23,7 @@ cat > "$PLIST_PATH" <<EOF
     <key>WorkingDirectory</key><string>${PROJECT_DIR}</string>
     <key>RunAtLoad</key><true/>
     <key>KeepAlive</key><true/>
+    <key>ThrottleInterval</key><integer>5</integer>
     <key>StandardOutPath</key><string>${PROJECT_DIR}/ytremote.log</string>
     <key>StandardErrorPath</key><string>${PROJECT_DIR}/ytremote.err</string>
 </dict>
