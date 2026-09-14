@@ -1,20 +1,26 @@
-# Server Settings
+"""Central configuration for the Pear Desktop Remote server."""
+
 HOST = "0.0.0.0"
 PORT = 8080
 
-# Pear Desktop API Configuration
 PEAR_API_BASE = "http://localhost:26538/api/v1"
-API_TIMEOUT = 0.8  # seconds
+API_TIMEOUT = 0.8
 
-# Controls & UI Scaling
-VOLUME_STEP = 5  # Percent increase/decrease per click
-POLL_INTERVAL_MS = 1500  # How often web UI polls server for updates
+VOLUME_STEP = 5
+POLL_INTERVAL_MS = 1500
 
-# Mobile Display Customizations
 CARD_MAX_WIDTH = "340px"
 ARTWORK_MAX_HEIGHT = "340px"
 TRACK_BAR_HEIGHT = "6px"
 BUTTON_MIN_HEIGHT = "20px"
-ACCENT_COLOR = "#ff0000"  # Play button & progress fill color
+ACCENT_COLOR = "#ff0000"
 BACKGROUND_COLOR = "#030303"
 CARD_BACKGROUND = "#131313"
+
+MAX_PLAUSIBLE_DURATION_SECONDS = 3 * 3600
+DURATION_CHANGE_THRESHOLD_SECONDS = 5
+NEAR_END_THRESHOLD_SECONDS = 5.0
+AT_END_THRESHOLD_SECONDS = 1.0
+
+VOLUME_FALLBACK_PERCENT = 50
+OSASCRIPT_TIMEOUT_SECONDS = 0.5

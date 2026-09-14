@@ -1,10 +1,43 @@
-# pear-desktop-remote-server
-A basic webserver for a Mac running pear-desktop, you can open it on another device (like an old phone) so you have a dashboard and wireless remote control for your music.
-<img src="image.jpeg" alt="Demo" width="500">
+# Pear Desktop Remote Server
 
-# Install
-You need [Pear Desktop](https://github.com/pear-devs/pear-desktop) installed. You will also need to enable API server function. The script uses the default host/port (localhost:26538).
-Just run `./install.sh`. It should start on boot.
+A small macOS web remote for Pear Desktop / YouTube Music.
 
-# Customization
-You can adjust granualrity of volume steps, etc in `config.py`.
+## Run manually
+
+```sh
+python3 server.py
+```
+
+`server.py` remains as a compatibility entry point. New installs use `main.py`.
+
+Open the printed LAN URL on a phone or another device on the same network.
+
+## Install at login
+
+There is one installer script. The old `setup_startup.sh` was redundant and has been removed.
+
+```sh
+chmod +x install.sh
+./install.sh
+```
+
+The script creates a LaunchAgent at `~/Library/LaunchAgents/com.user.ytremote.plist`.
+Logs are written to `ytremote.log` and `ytremote.err` in the project directory.
+
+## Project structure
+
+- `main.py` — application entry point and restart loop.
+- `pear_remote_handler.py` — HTTP routes.
+- `pear_client.py` — Pear Desktop API client and progress normalization.
+- `controls.py` — playback/volume action dispatch.
+- `macos_control.py` — macOS volume integration.
+- `templating.py` — configuration injection into `index.html`.
+- `config.py` — all tunable settings.
+
+## Tests
+
+```sh
+python3 -m unittest discover -s tests
+```
+
+The server requires macOS for system-volume control and a running Pear Desktop instance for playback operations.
