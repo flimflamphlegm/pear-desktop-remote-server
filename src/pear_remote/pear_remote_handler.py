@@ -15,10 +15,12 @@ class PearRemoteHandler(http.server.BaseHTTPRequestHandler):
     def log_message(self, format: str, *args: object) -> None:
         return
 
-    def _send_body(self, body: bytes, content_type: str, status: int = 200) -> None:
+    def _send_body(self, body: bytes, content_type: str, status: int = 200, cache_control: str | None = None) -> None:
         self.send_response(status)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(body)))
+        if cache_control:
+            self.send_header("Cache-Control", cache_control)
         self.end_headers()
         self.wfile.write(body)
 
@@ -37,6 +39,13 @@ class PearRemoteHandler(http.server.BaseHTTPRequestHandler):
             info = pear_client.fetch_now_playing()
             info["volume"] = macos_control.get_system_volume()
             self._send_json(info)
+        elif path == "/api/artwork":
+            artwork = pear_client.fetch_artwork()
+            if artwork is None:
+                self._send_text("No artwork", status=404)
+            else:
+                content, content_type = artwork
+                self._send_body(content, content_type, cache_control="no-store")
         elif path.startswith("/control/"):
             action = path.rsplit("/", 1)[-1]
             recognized = controls.dispatch(action)
