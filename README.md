@@ -49,7 +49,7 @@ Logs are written to `ytremote.log` and `ytremote.err` in the project directory.
 ## Tests
 
 ```sh
-python3 -m unittest discover -s tests
+python3 -m unittest discover -s tests -v
 ```
 
 The server requires macOS for system-volume control and a running Pear Desktop instance for playback operations.
