@@ -19,7 +19,7 @@ cat > "$PLIST_PATH" <<EOF
 <plist version="1.0">
 <dict>
     <key>Label</key><string>${PLIST_LABEL}</string>
-    <key>ProgramArguments</key><array><string>${PYTHON_BIN}</string><string>${PROJECT_DIR}/main.py</string></array>
+    <key>ProgramArguments</key><array><string>${PYTHON_BIN}</string><string>${PROJECT_DIR}/server.py</string></array>
     <key>WorkingDirectory</key><string>${PROJECT_DIR}</string>
     <key>RunAtLoad</key><true/>
     <key>KeepAlive</key><true/>
