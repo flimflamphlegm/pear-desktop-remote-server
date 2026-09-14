@@ -1,19 +1,25 @@
 """HTTP routes for the remote UI and control API."""
 
+
 from __future__ import annotations
+
 
 import http.server
 import json
 import urllib.parse
 
+
 from . import controls, macos_control, pear_client, templating
+
 
 
 class PearRemoteHandler(http.server.BaseHTTPRequestHandler):
     """Serve the UI and expose status/control endpoints."""
 
+
     def log_message(self, format: str, *args: object) -> None:
         return
+
 
     def _send_body(self, body: bytes, content_type: str, status: int = 200, cache_control: str | None = None) -> None:
         self.send_response(status)
@@ -24,11 +30,14 @@ class PearRemoteHandler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+
     def _send_json(self, data: dict, status: int = 200) -> None:
         self._send_body(json.dumps(data).encode("utf-8"), "application/json", status)
 
+
     def _send_text(self, text: str, status: int = 200) -> None:
         self._send_body(text.encode("utf-8"), "text/plain; charset=utf-8", status)
+
 
     def do_GET(self) -> None:
         path = urllib.parse.urlparse(self.path).path
@@ -39,13 +48,6 @@ class PearRemoteHandler(http.server.BaseHTTPRequestHandler):
             info = pear_client.fetch_now_playing()
             info["volume"] = macos_control.get_system_volume()
             self._send_json(info)
-        elif path == "/api/artwork":
-            artwork = pear_client.fetch_artwork()
-            if artwork is None:
-                self._send_text("No artwork", status=404)
-            else:
-                content, content_type = artwork
-                self._send_body(content, content_type, cache_control="no-store")
         elif path.startswith("/control/"):
             action = path.rsplit("/", 1)[-1]
             recognized = controls.dispatch(action)

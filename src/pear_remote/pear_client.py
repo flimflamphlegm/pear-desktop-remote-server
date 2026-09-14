@@ -1,15 +1,20 @@
 """Client for the Pear Desktop local API."""
 
+
 from __future__ import annotations
+
 
 import json
 import logging
 import urllib.request
 
+
 from . import config
+
 
 LOGGER = logging.getLogger(__name__)
 _last_good_progress: dict[str, dict[str, float]] = {}
+
 
 _DEFAULT_SONG_INFO = {
     "title": "YouTube Music",
@@ -22,8 +27,10 @@ _DEFAULT_SONG_INFO = {
 }
 
 
+
 def _track_signature(title: str, artist: str, duration: float) -> str:
     return f"{title}|{artist}|{duration}"
+
 
 
 def _coerce_float(value: object) -> float:
@@ -33,10 +40,12 @@ def _coerce_float(value: object) -> float:
         return 0.0
 
 
+
 def _sanitize_progress(elapsed: float, duration: float) -> tuple[float, float]:
     if duration <= 0 or duration > config.MAX_PLAUSIBLE_DURATION_SECONDS:
         return 0.0, 0.0
     return max(0.0, min(elapsed, duration)), duration
+
 
 
 def _reconcile_progress(title: str, artist: str, elapsed: float, duration: float) -> float:
@@ -54,6 +63,7 @@ def _reconcile_progress(title: str, artist: str, elapsed: float, duration: float
     return elapsed
 
 
+
 def fetch_now_playing() -> dict:
     """Fetch and normalize current playback state."""
     try:
@@ -67,6 +77,7 @@ def fetch_now_playing() -> dict:
         LOGGER.debug("Unable to read Pear Desktop status: %s", error)
         return dict(_DEFAULT_SONG_INFO)
 
+
     title = data.get("title", "YouTube Music")
     artist = data.get("artist", "Now Playing")
     elapsed = _coerce_float(data.get("elapsedSeconds") or data.get("songProgress", 0))
@@ -74,6 +85,7 @@ def fetch_now_playing() -> dict:
     elapsed, duration = _sanitize_progress(elapsed, duration)
     if duration > 0:
         elapsed = _reconcile_progress(title, artist, elapsed, duration)
+
 
     return {
         "title": title,
@@ -85,27 +97,6 @@ def fetch_now_playing() -> dict:
         "duration": duration,
     }
 
-
-def fetch_artwork() -> tuple[bytes, str] | None:
-    """Fetch Pear Desktop artwork and return (bytes, content type)."""
-    info = fetch_now_playing()
-    artwork_url = info.get("artwork", "")
-    if not artwork_url:
-        return None
-
-    try:
-        request = urllib.request.Request(
-            artwork_url,
-            headers={"User-Agent": "Mozilla/5.0", "Accept": "image/*"},
-        )
-        with urllib.request.urlopen(request, timeout=config.API_TIMEOUT) as response:
-            content_type = response.headers.get_content_type() or "image/jpeg"
-            if not content_type.startswith("image/"):
-                content_type = "image/jpeg"
-            return response.read(), content_type
-    except OSError as error:
-        LOGGER.debug("Unable to fetch artwork: %s", error)
-        return None
 
 
 def send_command(endpoint: str) -> bool:
