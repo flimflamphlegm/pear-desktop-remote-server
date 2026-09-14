@@ -1,12 +1,19 @@
 """macOS system integration through osascript."""
 
 import subprocess
+import time
 
 from . import config
 
+_volume_cache: dict[str, float | int] = {"value": config.VOLUME_FALLBACK_PERCENT, "ts": 0.0}
+_VOLUME_CACHE_TTL_SECONDS = 2.0
 
-def get_system_volume() -> int:
-    """Return the current macOS output volume, or a safe fallback."""
+
+def get_system_volume(force: bool = False) -> int:
+    """Return the current macOS output volume, cached briefly to avoid repeated osascript spawns."""
+    now = time.monotonic()
+    if not force and (now - _volume_cache["ts"]) < _VOLUME_CACHE_TTL_SECONDS:
+        return _volume_cache["value"]
     try:
         result = subprocess.run(
             ["osascript", "-e", "output volume of (get volume settings)"],
@@ -15,13 +22,14 @@ def get_system_volume() -> int:
             timeout=config.OSASCRIPT_TIMEOUT_SECONDS,
             check=False,
         )
-        return max(0, min(100, int(result.stdout.strip() or config.VOLUME_FALLBACK_PERCENT)))
+        value = max(0, min(100, int(result.stdout.strip() or config.VOLUME_FALLBACK_PERCENT)))
     except (OSError, ValueError, subprocess.SubprocessError):
-        return config.VOLUME_FALLBACK_PERCENT
-
+        value = config.VOLUME_FALLBACK_PERCENT
+    _volume_cache["value"] = value
+    _volume_cache["ts"] = now
+    return value
 
 def set_system_volume(volume: int) -> None:
-    """Set macOS output volume, ignoring failures."""
     volume = max(0, min(100, int(volume)))
     try:
         subprocess.run(
@@ -31,10 +39,11 @@ def set_system_volume(volume: int) -> None:
         )
     except (OSError, subprocess.SubprocessError):
         pass
+    _volume_cache["value"] = volume
+    _volume_cache["ts"] = time.monotonic()
 
 
 def adjust_system_volume(delta: int) -> int:
-    """Adjust system volume by delta and return the resulting value."""
     new_volume = max(0, min(100, get_system_volume() + delta))
     set_system_volume(new_volume)
     return new_volume
