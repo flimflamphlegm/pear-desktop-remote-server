@@ -1,40 +1,12 @@
 #!/usr/bin/env python3
-"""Application entry point."""
+"""Root entry point for the Pear Desktop Remote server."""
 
-import http.server
-import logging
-import time
+import sys
+from pathlib import Path
 
-import config
-import net_utils
-from pear_remote_handler import PearRemoteHandler
+sys.path.insert(0, str(Path(__file__).with_name("src")))
 
-_RESTART_DELAY_SECONDS = 5
-
-
-def run_forever() -> None:
-    """Run the HTTP server and recover from network/socket interruptions."""
-    http.server.HTTPServer.allow_reuse_address = True
-    while True:
-        server = None
-        try:
-            server = http.server.ThreadingHTTPServer((config.HOST, config.PORT), PearRemoteHandler)
-            server.serve_forever()
-        except KeyboardInterrupt:
-            logging.info("Server stopped manually.")
-            break
-        except OSError as error:
-            logging.error("Server interruption: %s", error)
-            time.sleep(_RESTART_DELAY_SECONDS)
-        finally:
-            if server is not None:
-                server.server_close()
-
-
-def main() -> None:
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
-    logging.info("Pear Remote Server: http://%s:%s", net_utils.get_local_ip(), config.PORT)
-    run_forever()
+from pear_remote.main import main
 
 
 if __name__ == "__main__":

@@ -1,4 +1,9 @@
-import pear_client
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parents[1] / "src"))
+
+from pear_remote import pear_client
 
 
 def test_sanitize_progress_clamps_elapsed():

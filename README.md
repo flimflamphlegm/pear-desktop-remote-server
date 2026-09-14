@@ -4,7 +4,7 @@ A small macOS web remote for Pear Desktop / YouTube Music.
 
 ## Demo
 
-![Pear Desktop Remote demo](image.jpeg)
+![Pear Desktop Remote demo](docs/assets/demo.jpeg)
 
 ## Run manually
 
@@ -12,13 +12,11 @@ A small macOS web remote for Pear Desktop / YouTube Music.
 python3 server.py
 ```
 
-`server.py` remains as a compatibility entry point. New installs use `main.py`.
+`server.py` remains a compatibility entry point. New installations use `main.py`.
 
 Open the printed LAN URL on a phone or another device on the same network.
 
 ## Install at login
-
-There is one installer script. The old `setup_startup.sh` was redundant and has been removed.
 
 ```sh
 chmod +x install.sh
@@ -30,13 +28,24 @@ Logs are written to `ytremote.log` and `ytremote.err` in the project directory.
 
 ## Project structure
 
-- `main.py` — application entry point and restart loop.
-- `pear_remote_handler.py` — HTTP routes.
-- `pear_client.py` — Pear Desktop API client and progress normalization.
-- `controls.py` — playback/volume action dispatch.
-- `macos_control.py` — macOS volume integration.
-- `templating.py` — configuration injection into `index.html`.
-- `config.py` — all tunable settings.
+```text
+.
+├── docs/assets/demo.jpeg
+├── install.sh
+├── main.py
+├── server.py
+├── src/pear_remote/
+│   ├── config.py
+│   ├── controls.py
+│   ├── macos_control.py
+│   ├── main.py
+│   ├── net_utils.py
+│   ├── pear_client.py
+│   ├── pear_remote_handler.py
+│   ├── templating.py
+│   └── index.html
+└── tests/
+```
 
 ## Tests
 
