@@ -68,7 +68,7 @@ def fetch_now_playing() -> dict:
     """Fetch and normalize current playback state."""
     try:
         request = urllib.request.Request(
-            f"{config.PEAR_API_BASE}/song-info",
+            f"{config.PEAR_API_BASE}/song",
             headers={"User-Agent": "PearRemote/1.0"},
         )
         with urllib.request.urlopen(request, timeout=config.API_TIMEOUT) as response:
