@@ -9,11 +9,14 @@ import logging
 import urllib.request
 
 
+
 from . import config
+
 
 
 LOGGER = logging.getLogger(__name__)
 _last_good_progress: dict[str, dict[str, float]] = {}
+
 
 
 _DEFAULT_SONG_INFO = {
@@ -78,6 +81,7 @@ def fetch_now_playing() -> dict:
         return dict(_DEFAULT_SONG_INFO)
 
 
+
     title = data.get("title", "YouTube Music")
     artist = data.get("artist", "Now Playing")
     elapsed = _coerce_float(data.get("elapsedSeconds") or data.get("songProgress", 0))
@@ -85,6 +89,7 @@ def fetch_now_playing() -> dict:
     elapsed, duration = _sanitize_progress(elapsed, duration)
     if duration > 0:
         elapsed = _reconcile_progress(title, artist, elapsed, duration)
+
 
 
     return {
@@ -112,4 +117,89 @@ def send_command(endpoint: str) -> bool:
             return response.status == 200
     except OSError as error:
         LOGGER.warning("Pear API command %s failed: %s", endpoint, error)
+        return False
+
+
+
+def get_shuffle_state() -> bool:
+    """Get current shuffle state from /api/v1/shuffle GET"""
+    try:
+        request = urllib.request.Request(
+            f"{config.PEAR_API_BASE}/shuffle",
+            headers={"User-Agent": "PearRemote/1.0"},
+        )
+        with urllib.request.urlopen(request, timeout=config.API_TIMEOUT) as response:
+            data = json.loads(response.read().decode("utf-8"))
+            return bool(data.get("state", False))
+    except (OSError, ValueError, json.JSONDecodeError) as error:
+        LOGGER.debug("Unable to read shuffle state: %s", error)
+        return False
+
+
+
+def toggle_shuffle() -> bool:
+    """Toggle shuffle via /api/v1/shuffle POST"""
+    try:
+        request = urllib.request.Request(
+            f"{config.PEAR_API_BASE}/shuffle",
+            data=b"",
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(request, timeout=config.API_TIMEOUT) as response:
+            return response.status == 204
+    except OSError as error:
+        LOGGER.warning("Pear API shuffle toggle failed: %s", error)
+        return False
+
+
+
+def get_repeat_mode() -> str:
+    """Get current repeat mode from /api/v1/repeat-mode GET (NONE, ALL, ONE)"""
+    try:
+        request = urllib.request.Request(
+            f"{config.PEAR_API_BASE}/repeat-mode",
+            headers={"User-Agent": "PearRemote/1.0"},
+        )
+        with urllib.request.urlopen(request, timeout=config.API_TIMEOUT) as response:
+            data = json.loads(response.read().decode("utf-8"))
+            mode = data.get("mode", "NONE")
+            print(f"Repeat mode API response: {data}, parsed mode: {mode}")  # Debug line
+            return mode
+    except (OSError, ValueError, json.JSONDecodeError) as error:
+        LOGGER.debug("Unable to read repeat mode: %s", error)
+        return "NONE"
+
+
+def switch_repeat(iteration: int = 0) -> bool:
+    """Switch repeat mode via /api/v1/switch-repeat POST"""
+    try:
+        request = urllib.request.Request(
+            f"{config.PEAR_API_BASE}/switch-repeat",
+            data=json.dumps({"iteration": iteration}).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(request, timeout=config.API_TIMEOUT) as response:
+            return response.status == 204
+    except OSError as error:
+        LOGGER.warning("Pear API switch repeat failed: %s", error)
+        return False
+
+
+
+def cycle_repeat_mode() -> bool:
+    """Cycle through repeat modes: NONE -> ALL -> ONE -> NONE"""
+    try:
+        # Just call switch-repeat with iteration 0 to cycle to next mode
+        request = urllib.request.Request(
+            f"{config.PEAR_API_BASE}/switch-repeat",
+            data=json.dumps({"iteration": 0}).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(request, timeout=config.API_TIMEOUT) as response:
+            return response.status == 204
+    except OSError as error:
+        LOGGER.warning("Pear API cycle repeat failed: %s", error)
         return False

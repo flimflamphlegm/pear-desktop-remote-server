@@ -4,6 +4,9 @@ A small macOS web remote for Pear Desktop / YouTube Music.
 
 ## Demo
 
+New minimal mode!
+![Pear Desktop minimal demo](image_mode2.jpg)
+
 ![Pear Desktop Remote demo](image.jpeg)
 
 ## Run manually
