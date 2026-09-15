@@ -7,6 +7,7 @@ from __future__ import annotations
 import http.server
 import json
 import urllib.parse
+import urllib.request
 
 
 
@@ -45,6 +46,25 @@ class PearRemoteHandler(http.server.BaseHTTPRequestHandler):
 
 
 
+    def _call_pear_api(self, endpoint: str, method: str = "POST", data: dict | None = None) -> bool:
+        """Call Pear Desktop API directly."""
+        try:
+            url = f"{config.PEAR_API_BASE}/{endpoint}"
+            body = json.dumps(data).encode("utf-8") if data else b""
+            request = urllib.request.Request(
+                url,
+                data=body,
+                headers={"Content-Type": "application/json"},
+                method=method,
+            )
+            with urllib.request.urlopen(request, timeout=config.API_TIMEOUT) as response:
+                return response.status in (200, 204)
+        except OSError as error:
+            print(f"Pear API call {endpoint} failed: {error}")
+            return False
+
+
+
     def do_GET(self) -> None:
         path = urllib.parse.urlparse(self.path).path
         if path == "/favicon.ico":
@@ -68,8 +88,20 @@ class PearRemoteHandler(http.server.BaseHTTPRequestHandler):
             self._send_json({"mode": mode})
         elif path.startswith("/control/"):
             action = path.rsplit("/", 1)[-1]
-            recognized = controls.dispatch(action)
-            self._send_text("OK" if recognized else f"Unknown action: {action}", 200 if recognized else 400)
+            # Map web controls to Pear API endpoints
+            endpoint_map = {
+                "playpause": "playpause",
+                "prev": "prev",
+                "next": "next",
+                "vol_up": "vol_up",
+                "vol_down": "vol_down",
+            }
+            endpoint = endpoint_map.get(action)
+            if endpoint:
+                success = self._call_pear_api(endpoint)
+                self._send_text("OK" if success else "Failed", 200 if success else 500)
+            else:
+                self._send_text(f"Unknown action: {action}", 400)
         else:
             self._send_body(templating.render_index_html().encode("utf-8"), "text/html; charset=utf-8")
 
@@ -79,7 +111,7 @@ class PearRemoteHandler(http.server.BaseHTTPRequestHandler):
         path = urllib.parse.urlparse(self.path).path
         if path == "/api/v1/shuffle":
             # POST /api/v1/shuffle - toggle shuffle
-            success = pear_client.toggle_shuffle()
+            success = self._call_pear_api("shuffle")
             if success:
                 self.send_response(204)
                 self.end_headers()
@@ -94,7 +126,7 @@ class PearRemoteHandler(http.server.BaseHTTPRequestHandler):
                 iteration = int(data.get("iteration", 0))
             except (json.JSONDecodeError, ValueError, TypeError):
                 iteration = 0
-            success = pear_client.switch_repeat(iteration)
+            success = self._call_pear_api("switch-repeat", data={"iteration": iteration})
             if success:
                 self.send_response(204)
                 self.end_headers()
