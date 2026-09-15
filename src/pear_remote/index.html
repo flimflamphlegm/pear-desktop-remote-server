@@ -30,6 +30,14 @@
         .btn-vol { background: #212121; color: #fff; width: 38px; height: 38px; min-height: 38px; padding: 0; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 1px solid #333; flex: none; }
         .bar-container { flex-grow: 1; margin: 0 18px; background: #212121; height: 8px; border-radius: 4px; overflow: hidden; }
         .bar-fill { background: {{ACCENT_COLOR}}; height: 100%; width: 50%; transition: width 0.15s ease-out; }
+        
+        /* Minimal mode styles */
+        .minimal-controls { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 10px 0; flex-shrink: 0; }
+        .minimal-controls button { background: #212121; color: #fff; border: 1px solid #333; width: 56px; height: 56px; min-width: 56px; min-height: 56px; padding: 0; font-size: 1.5rem; border-radius: 12px; cursor: pointer; touch-action: manipulation; display: flex; align-items: center; justify-content: center; }
+        .minimal-controls button:active { transform: scale(0.95); background: #333; }
+        .minimal-controls button.active { background: {{ACCENT_COLOR}}; border-color: {{ACCENT_COLOR}}; }
+        .hidden { display: none !important; }
+        
         @media (max-height: 600px) { .card { padding: 8px 12px; } }
         @media (max-height: 480px) { .card { padding: 6px 10px; } .time-labels { margin-top: 4px; } }
     </style>
@@ -40,8 +48,20 @@
         <div class="marquee-container"><h2 id="title-wrap" class="marquee-inner"><span id="title">YouTube Music</span><span id="title-clone" style="padding-left: 60px;"></span></h2></div>
         <div class="meta-container"><div class="marquee-container"><div id="artist-wrap" class="track-sub marquee-inner"><span id="artist">Connecting...</span><span id="artist-clone" style="padding-left: 60px;"></span></div></div><div class="marquee-container"><div id="album-wrap" class="track-sub marquee-inner"><span id="album"></span><span id="album-clone" style="padding-left: 60px;"></span></div></div></div>
         <div class="progress-panel"><div class="track-bar"><div class="track-fill" id="track-fill"></div></div><div class="time-labels"><span id="time-elapsed">0:00</span><span id="time-duration">0:00</span></div></div>
-        <div class="controls"><button onclick="sendControl('prev')">❮ Prev</button><button class="btn-primary" id="play-btn" onclick="sendControl('playpause')">Play ▶</button><button onclick="sendControl('next')">Next ❯</button></div>
-        <div class="vol-panel"><button class="btn-vol" onclick="sendControl('vol_down')">−</button><div class="bar-container"><div id="vol-bar" class="bar-fill"></div></div><button class="btn-vol" onclick="sendControl('vol_up')">+</button></div>
+        
+        <!-- Standard controls -->
+        <div class="controls" id="standard-controls"><button onclick="sendControl('prev')">❮ Prev</button><button class="btn-primary" id="play-btn" onclick="sendControl('playpause')">Play ▶</button><button onclick="sendControl('next')">Next ❯</button></div>
+        
+        <!-- Minimal mode 5-button layout -->
+        <div class="minimal-controls hidden" id="minimal-controls">
+            <button id="btn-shuffle" onclick="toggleShuffle()" title="Shuffle">🔀</button>
+            <button onclick="sendControl('prev')" title="Previous">⏮</button>
+            <button id="btn-playpause" onclick="sendControl('playpause')" title="Play/Pause">⏯</button>
+            <button onclick="sendControl('next')" title="Next">⏭</button>
+            <button id="btn-repeat" onclick="cycleRepeat()" title="Repeat">🔁</button>
+        </div>
+        
+        <div class="vol-panel" id="vol-panel"><button class="btn-vol" onclick="sendControl('vol_down')">−</button><div class="bar-container"><div id="vol-bar" class="bar-fill"></div></div><button class="btn-vol" onclick="sendControl('vol_up')">+</button></div>
     </div>
     <script>
         let isSending = false;
@@ -51,7 +71,13 @@
         let currentDuration = 0;
         let lastKnownElapsed = 0;
         let playStartTime = 0;
-        const EMPTY_ALBUM_TEXT = '(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧';
+        const EMPTY_ALBUM_TEXT = '(ﾉ◕ヮ◕) ﾉ*:･ﾟ✧';
+        
+        // Minimal mode state
+        let isMinimalMode = {{MINIMAL_MODE}};
+        let currentShuffleState = false;
+        let currentRepeatMode = 'NONE';
+
 
         function formatTime(secs) {
             if (isNaN(secs) || secs <= 0) return "0:00";
@@ -60,14 +86,17 @@
             return minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
         }
 
+
         function clampElapsed(elapsed, duration) {
             if (duration <= 0) return 0;
             return Math.max(0, Math.min(elapsed, duration));
         }
 
+
         function isValidElapsed(elapsed, duration) {
             return Number.isFinite(elapsed) && Number.isFinite(duration) && (duration <= 0 || (elapsed >= 0 && elapsed <= duration));
         }
+
 
         function setupMarquee(prefix, text) {
             const wrap = document.getElementById(prefix + '-wrap');
@@ -89,6 +118,7 @@
             }
         }
 
+
         function updateMarquees(title, artist, album) {
             const signature = `${title}|${artist}|${album}`;
             if (signature === activeSongSignature) return;
@@ -100,6 +130,7 @@
             });
         }
 
+
         function updateArtwork(artwork) {
             const container = document.getElementById('art-container');
             if (artwork && artwork !== currentArtwork) {
@@ -110,6 +141,7 @@
                 container.innerHTML = `<span class="art-placeholder">🎵</span>`;
             }
         }
+
 
         function updateProgress(data) {
             const isPaused = data.isPaused !== undefined ? data.isPaused : !data.is_playing;
@@ -138,12 +170,14 @@
                 state = isPaused ? 'PAUSED' : 'PLAYING';
             }
             document.getElementById('play-btn').innerText = isPaused ? 'Play ▶' : 'Pause ❚❚';
+            document.getElementById('btn-playpause').innerText = isPaused ? '▶' : '❚❚';
             document.getElementById('time-duration').innerText = formatTime(currentDuration);
             if (isPaused) {
                 document.getElementById('time-elapsed').innerText = formatTime(lastKnownElapsed);
                 document.getElementById('track-fill').style.width = (currentDuration ? lastKnownElapsed / currentDuration * 100 : 0) + '%';
             }
         }
+
 
         function animateProgress() {
             if (state === 'PLAYING' && currentDuration > 0) {
@@ -155,18 +189,53 @@
         }
         requestAnimationFrame(animateProgress);
 
+
         async function updateStatus() {
             try {
                 const response = await fetch('/api/status');
                 const data = await response.json();
                 updateMarquees(data.title, data.artist, data.album || EMPTY_ALBUM_TEXT);
-                document.getElementById('vol-bar').style.width = Math.max(0, Math.min(100, Number(data.volume) || 0)) + '%';
+                if (!isMinimalMode) {
+                    document.getElementById('vol-bar').style.width = Math.max(0, Math.min(100, Number(data.volume) || 0)) + '%';
+                }
                 updateProgress(data);
                 updateArtwork(data.artwork);
             } catch (error) {
                 console.error('Sync error:', error);
             }
         }
+
+
+        async function updateShuffleState() {
+            try {
+                const response = await fetch('/api/v1/shuffle');
+                const data = await response.json();
+                currentShuffleState = data.state;
+                document.getElementById('btn-shuffle').classList.toggle('active', currentShuffleState);
+            } catch (error) {
+                console.error('Shuffle state error:', error);
+            }
+        }
+
+
+        async function updateRepeatState() {
+            try {
+                const response = await fetch('/api/v1/repeat-mode');
+                const data = await response.json();
+                currentRepeatMode = data.mode;
+                // Update repeat button icon based on mode
+                const btn = document.getElementById('btn-repeat');
+                btn.classList.toggle('active', currentRepeatMode !== 'NONE');
+                if (currentRepeatMode === 'ONE') {
+                    btn.innerText = '🔂';
+                } else {
+                    btn.innerText = '🔁';
+                }
+            } catch (error) {
+                console.error('Repeat state error:', error);
+            }
+        }
+
 
         function sendControl(action) {
             if (isSending) return;
@@ -177,8 +246,61 @@
                 .finally(() => { isSending = false; });
         }
 
+
+        async function toggleShuffle() {
+            try {
+                await fetch('/api/v1/shuffle', { method: 'POST' });
+                await updateShuffleState();
+            } catch (error) {
+                console.error('Shuffle toggle error:', error);
+            }
+        }
+
+
+        async function cycleRepeat() {
+            try {
+                // Cycle through NONE -> ALL -> ONE -> NONE
+                await fetch('/api/v1/switch-repeat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ iteration: 0 })
+                });
+                await updateRepeatState();
+            } catch (error) {
+                console.error('Repeat cycle error:', error);
+            }
+        }
+
+
+        function setupMinimalMode() {
+            const standardControls = document.getElementById('standard-controls');
+            const minimalControls = document.getElementById('minimal-controls');
+            const volPanel = document.getElementById('vol-panel');
+            
+            if (isMinimalMode) {
+                standardControls.classList.add('hidden');
+                minimalControls.classList.remove('hidden');
+                volPanel.classList.add('hidden');
+                updateShuffleState();
+                updateRepeatState();
+            } else {
+                standardControls.classList.remove('hidden');
+                minimalControls.classList.add('hidden');
+                volPanel.classList.remove('hidden');
+            }
+        }
+
+
         setInterval(updateStatus, {{POLL_INTERVAL_MS}});
+        // Update shuffle/repeat state less frequently to reduce API calls
+        setInterval(() => {
+            if (isMinimalMode) {
+                updateShuffleState();
+                updateRepeatState();
+            }
+        }, 3000);
         updateStatus();
+        setupMinimalMode();
     </script>
 </body>
 </html>

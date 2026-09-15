@@ -1,10 +1,14 @@
 """HTML template rendering."""
 
+
 from pathlib import Path
+
 
 from . import config
 
+
 _TEMPLATE_PATH = Path(__file__).with_name("index.html")
+
 
 _PLACEHOLDERS = {
     "{{BACKGROUND_COLOR}}": config.BACKGROUND_COLOR,
@@ -15,7 +19,9 @@ _PLACEHOLDERS = {
     "{{BUTTON_MIN_HEIGHT}}": config.BUTTON_MIN_HEIGHT,
     "{{ACCENT_COLOR}}": config.ACCENT_COLOR,
     "{{POLL_INTERVAL_MS}}": str(config.POLL_INTERVAL_MS),
+    "{{MINIMAL_MODE}}": "true" if config.MINIMAL_MODE else "false",
 }
+
 
 
 def render_index_html() -> str:
