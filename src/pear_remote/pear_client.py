@@ -163,11 +163,12 @@ def get_repeat_mode() -> str:
         )
         with urllib.request.urlopen(request, timeout=config.API_TIMEOUT) as response:
             data = json.loads(response.read().decode("utf-8"))
-            return data.get("mode", "NONE")
+            mode = data.get("mode", "NONE")
+            print(f"Repeat mode API response: {data}, parsed mode: {mode}")  # Debug line
+            return mode
     except (OSError, ValueError, json.JSONDecodeError) as error:
         LOGGER.debug("Unable to read repeat mode: %s", error)
         return "NONE"
-
 
 
 def switch_repeat(iteration: int = 0) -> bool:

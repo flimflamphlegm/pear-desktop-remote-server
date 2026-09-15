@@ -22,7 +22,7 @@
         .track-bar { width: 100%; height: {{TRACK_BAR_HEIGHT}}; background: #282828; border-radius: 4px; overflow: hidden; }
         .track-fill { background: {{ACCENT_COLOR}}; height: 100%; width: 0%; }
         .time-labels { display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600; color: #888; margin-top: 8px; font-variant-numeric: tabular-nums; }
-        .controls { display: flex; align-items: center; justify-content: center; margin-bottom: 4px; flex-shrink: 0; height: 48px; }
+        .controls { display: flex; align-items: center; justify-content: center; margin-bottom: 4px; flex-shrink: 0; height: 30px; }
         button { background: #212121; color: #fff; border: 1px solid #333; padding: 0 4px; margin: 0 3px; font-size: 0.75rem; font-weight: bold; border-radius: 30px; cursor: pointer; touch-action: manipulation; flex: 1; min-width: 0; height: {{BUTTON_MIN_HEIGHT}}; min-height: {{BUTTON_MIN_HEIGHT}}; display: flex; align-items: center; justify-content: center; line-height: normal; }
         button:active { transform: scale(0.95); background: #333; }
         .btn-primary { background: {{ACCENT_COLOR}}; border: none; flex: 1.3; font-size: 0.95rem; height: {{BUTTON_MIN_HEIGHT}}; min-height: {{BUTTON_MIN_HEIGHT}}; max-height: {{BUTTON_MIN_HEIGHT}}; display: flex; align-items: center; justify-content: center; }
@@ -32,11 +32,14 @@
         .bar-fill { background: {{ACCENT_COLOR}}; height: 100%; width: 50%; transition: width 0.15s ease-out; }
         
         /* Minimal mode styles */
-        .minimal-controls { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 10px 0; flex-shrink: 0; }
-        .minimal-controls button { background: #212121; color: #888; border: 1px solid #333; width: 48px; height: 48px; min-width: 48px; min-height: 48px; padding: 0; font-size: 1.2rem; border-radius: 10px; cursor: pointer; touch-action: manipulation; display: flex; align-items: center; justify-content: center; }
+        .minimal-controls { display: flex; align-items: center; justify-content: center; gap: 4px; margin: 10px 0; flex-shrink: 0; }
+        .minimal-controls button { background: #212121; color: #aaa; border: 1px solid #333; width: 44px; height: 44px; min-width: 44px; min-height: 44px; padding: 0; border-radius: 10px; cursor: pointer; touch-action: manipulation; display: flex; align-items: center; justify-content: center; }
         .minimal-controls button:active { transform: scale(0.95); background: #333; }
-        .minimal-controls button.active { background: {{ACCENT_COLOR}}; border-color: {{ACCENT_COLOR}}; color: #fff; }
-        .minimal-controls button svg { width: 22px; height: 22px; fill: currentColor; }
+        .minimal-controls button.active { background: #3a3a3a; border-color: #555; color: #fff; }
+        .minimal-controls button svg { width: 20px; height: 20px; fill: currentColor; }
+        .minimal-controls button.active-all { background: #3a3a3a; border-color: #555; color: #fff; }
+        .minimal-controls button.active-one { background: #4a4a4a; border-color: #666; color: #fff; position: relative; }
+        .minimal-controls button.active-one::after { content: "1"; position: absolute; bottom: 2px; right: 2px; font-size: 9px; font-weight: bold; color: #fff; background: #212121; padding: 2px 4px; border-radius: 6px; }
         .hidden { display: none !important; }
         
         @media (max-height: 600px) { .card { padding: 8px 12px; } }
@@ -59,14 +62,11 @@
                 <svg viewBox="0 0 24 24"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>
             </button>
             <button onclick="sendControl('prev')" title="Previous">
-                <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+                <svg viewBox="0 0 24 24"><path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/></svg>
             </button>
-            <button id="btn-playpause" onclick="sendControl('playpause')" title="Play/Pause">
-                <svg viewBox="0 0 24 24" id="icon-play"><path d="M8 5v14l11-7z"/></svg>
-                <svg viewBox="0 0 24 24" id="icon-pause" style="display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-            </button>
+            <button id="btn-playpause" onclick="sendControl('playpause')" title="Play/Pause">⏯</button>
             <button onclick="sendControl('next')" title="Next">
-                <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+                <svg viewBox="0 0 24 24"><path d="M4 18l8.5-6L4 6v12zm9-12v12h2V6h-2z"/></svg>
             </button>
             <button id="btn-repeat" onclick="cycleRepeat()" title="Repeat">
                 <svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v6z"/></svg>
@@ -181,15 +181,8 @@
                 lastKnownElapsed = elapsed;
                 state = isPaused ? 'PAUSED' : 'PLAYING';
             }
-            const playIcon = document.getElementById('icon-play');
-            const pauseIcon = document.getElementById('icon-pause');
-            if (isPaused) {
-                playIcon.style.display = 'block';
-                pauseIcon.style.display = 'none';
-            } else {
-                playIcon.style.display = 'none';
-                pauseIcon.style.display = 'block';
-            }
+            const playText = isPaused ? 'Play ▶' : 'Pause ❚❚';
+            document.getElementById('play-btn').innerText = playText;
             document.getElementById('time-duration').innerText = formatTime(currentDuration);
             if (isPaused) {
                 document.getElementById('time-elapsed').innerText = formatTime(lastKnownElapsed);
@@ -242,25 +235,37 @@
                 const response = await fetch('/api/v1/repeat-mode');
                 const data = await response.json();
                 currentRepeatMode = data.mode;
-                // Update repeat button state based on mode
                 const btn = document.getElementById('btn-repeat');
-                // Active when mode is ALL or ONE (not NONE)
-                btn.classList.toggle('active', currentRepeatMode !== 'NONE');
+                
+                // Reset all states
+                btn.classList.remove('active-all', 'active-one');
+                
+                // Apply appropriate state
+                if (currentRepeatMode === 'ALL') {
+                    btn.classList.add('active-all');
+                } else if (currentRepeatMode === 'ONE') {
+                    btn.classList.add('active-one');
+                }
+                // NONE = no class, stays grey
             } catch (error) {
                 console.error('Repeat state error:', error);
             }
         }
 
-
         function sendControl(action) {
             if (isSending) return;
             isSending = true;
+            
+            // Immediately update UI for playpause to prevent glitching
+            if (action === 'playpause') {
+                togglePlayPauseUI();
+            }
+            
             fetch('/control/' + encodeURIComponent(action))
                 .then(() => setTimeout(updateStatus, 200))
                 .catch(error => console.error('Control error:', error))
                 .finally(() => { isSending = false; });
         }
-
 
         async function toggleShuffle() {
             try {
@@ -274,18 +279,16 @@
 
         async function cycleRepeat() {
             try {
-                // Cycle through NONE -> ALL -> ONE -> NONE
                 await fetch('/api/v1/switch-repeat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ iteration: 0 })
+                    body: JSON.stringify({ iteration: 1 })
                 });
                 await updateRepeatState();
             } catch (error) {
                 console.error('Repeat cycle error:', error);
             }
         }
-
 
         function setupMinimalMode() {
             const standardControls = document.getElementById('standard-controls');
@@ -298,6 +301,14 @@
                 volPanel.classList.add('hidden');
                 updateShuffleState();
                 updateRepeatState();
+                // Get initial play/pause state from server
+                fetch('/api/status')
+                    .then(r => r.json())
+                    .then(data => {
+                        const isPaused = data.isPaused !== undefined ? data.isPaused : !data.is_playing;
+                        document.getElementById('btn-playpause').innerText = isPaused ? '▶' : '❚❚';
+                    })
+                    .catch(() => {});
             } else {
                 standardControls.classList.remove('hidden');
                 minimalControls.classList.add('hidden');
@@ -305,9 +316,13 @@
             }
         }
 
+        function togglePlayPauseUI() {
+            const btn = document.getElementById('btn-playpause');
+            const isPaused = btn.innerText === '▶';
+            btn.innerText = isPaused ? '❚❚' : '▶';
+        }
 
         setInterval(updateStatus, {{POLL_INTERVAL_MS}});
-        // Update shuffle/repeat state less frequently to reduce API calls
         setInterval(() => {
             if (isMinimalMode) {
                 updateShuffleState();

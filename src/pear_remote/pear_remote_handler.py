@@ -85,6 +85,7 @@ class PearRemoteHandler(http.server.BaseHTTPRequestHandler):
         elif path == "/api/v1/repeat-mode":
             # GET /api/v1/repeat-mode - get repeat mode (NONE, ALL, ONE)
             mode = pear_client.get_repeat_mode()
+            print(f"Handler returning mode: {mode}")  # Debug line
             self._send_json({"mode": mode})
         elif path.startswith("/control/"):
             action = path.rsplit("/", 1)[-1]
