@@ -32,10 +32,11 @@
         .bar-fill { background: {{ACCENT_COLOR}}; height: 100%; width: 50%; transition: width 0.15s ease-out; }
         
         /* Minimal mode styles */
-        .minimal-controls { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 10px 0; flex-shrink: 0; }
-        .minimal-controls button { background: #212121; color: #fff; border: 1px solid #333; width: 56px; height: 56px; min-width: 56px; min-height: 56px; padding: 0; font-size: 1.5rem; border-radius: 12px; cursor: pointer; touch-action: manipulation; display: flex; align-items: center; justify-content: center; }
+        .minimal-controls { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 10px 0; flex-shrink: 0; }
+        .minimal-controls button { background: #212121; color: #888; border: 1px solid #333; width: 48px; height: 48px; min-width: 48px; min-height: 48px; padding: 0; font-size: 1.2rem; border-radius: 10px; cursor: pointer; touch-action: manipulation; display: flex; align-items: center; justify-content: center; }
         .minimal-controls button:active { transform: scale(0.95); background: #333; }
-        .minimal-controls button.active { background: {{ACCENT_COLOR}}; border-color: {{ACCENT_COLOR}}; }
+        .minimal-controls button.active { background: {{ACCENT_COLOR}}; border-color: {{ACCENT_COLOR}}; color: #fff; }
+        .minimal-controls button svg { width: 22px; height: 22px; fill: currentColor; }
         .hidden { display: none !important; }
         
         @media (max-height: 600px) { .card { padding: 8px 12px; } }
@@ -54,11 +55,22 @@
         
         <!-- Minimal mode 5-button layout -->
         <div class="minimal-controls hidden" id="minimal-controls">
-            <button id="btn-shuffle" onclick="toggleShuffle()" title="Shuffle">🔀</button>
-            <button onclick="sendControl('prev')" title="Previous">⏮</button>
-            <button id="btn-playpause" onclick="sendControl('playpause')" title="Play/Pause">⏯</button>
-            <button onclick="sendControl('next')" title="Next">⏭</button>
-            <button id="btn-repeat" onclick="cycleRepeat()" title="Repeat">🔁</button>
+            <button id="btn-shuffle" onclick="toggleShuffle()" title="Shuffle">
+                <svg viewBox="0 0 24 24"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>
+            </button>
+            <button onclick="sendControl('prev')" title="Previous">
+                <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+            </button>
+            <button id="btn-playpause" onclick="sendControl('playpause')" title="Play/Pause">
+                <svg viewBox="0 0 24 24" id="icon-play"><path d="M8 5v14l11-7z"/></svg>
+                <svg viewBox="0 0 24 24" id="icon-pause" style="display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+            </button>
+            <button onclick="sendControl('next')" title="Next">
+                <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+            </button>
+            <button id="btn-repeat" onclick="cycleRepeat()" title="Repeat">
+                <svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v6z"/></svg>
+            </button>
         </div>
         
         <div class="vol-panel" id="vol-panel"><button class="btn-vol" onclick="sendControl('vol_down')">−</button><div class="bar-container"><div id="vol-bar" class="bar-fill"></div></div><button class="btn-vol" onclick="sendControl('vol_up')">+</button></div>
@@ -169,10 +181,15 @@
                 lastKnownElapsed = elapsed;
                 state = isPaused ? 'PAUSED' : 'PLAYING';
             }
-            const playText = isPaused ? 'Play ▶' : 'Pause ❚❚';
-            const playIcon = isPaused ? '▶' : '❚❚';
-            document.getElementById('play-btn').innerText = playText;
-            document.getElementById('btn-playpause').innerText = playIcon;
+            const playIcon = document.getElementById('icon-play');
+            const pauseIcon = document.getElementById('icon-pause');
+            if (isPaused) {
+                playIcon.style.display = 'block';
+                pauseIcon.style.display = 'none';
+            } else {
+                playIcon.style.display = 'none';
+                pauseIcon.style.display = 'block';
+            }
             document.getElementById('time-duration').innerText = formatTime(currentDuration);
             if (isPaused) {
                 document.getElementById('time-elapsed').innerText = formatTime(lastKnownElapsed);
@@ -225,14 +242,10 @@
                 const response = await fetch('/api/v1/repeat-mode');
                 const data = await response.json();
                 currentRepeatMode = data.mode;
-                // Update repeat button icon based on mode
+                // Update repeat button state based on mode
                 const btn = document.getElementById('btn-repeat');
+                // Active when mode is ALL or ONE (not NONE)
                 btn.classList.toggle('active', currentRepeatMode !== 'NONE');
-                if (currentRepeatMode === 'ONE') {
-                    btn.innerText = '🔂';
-                } else {
-                    btn.innerText = '🔁';
-                }
             } catch (error) {
                 console.error('Repeat state error:', error);
             }

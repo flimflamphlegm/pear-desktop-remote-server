@@ -83,15 +83,15 @@ class PearRemoteHandler(http.server.BaseHTTPRequestHandler):
             state = pear_client.get_shuffle_state()
             self._send_json({"state": state})
         elif path == "/api/v1/repeat-mode":
-            # GET /api/v1/repeat-mode - get repeat mode
+            # GET /api/v1/repeat-mode - get repeat mode (NONE, ALL, ONE)
             mode = pear_client.get_repeat_mode()
             self._send_json({"mode": mode})
         elif path.startswith("/control/"):
             action = path.rsplit("/", 1)[-1]
             # Map web controls to Pear API endpoints
             endpoint_map = {
-                "playpause": "playpause",
-                "prev": "prev",
+                "playpause": "toggle-play",
+                "prev": "previous",
                 "next": "next",
                 "vol_up": "vol_up",
                 "vol_down": "vol_down",
