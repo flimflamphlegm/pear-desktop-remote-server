@@ -31,7 +31,6 @@ _DEFAULT_SONG_INFO = {
 
 
 
-
 def _track_signature(title: str, artist: str, duration: float) -> str:
     return f"{title}|{artist}|{duration}"
 
@@ -184,4 +183,22 @@ def switch_repeat(iteration: int = 0) -> bool:
             return response.status == 204
     except OSError as error:
         LOGGER.warning("Pear API switch repeat failed: %s", error)
+        return False
+
+
+
+def cycle_repeat_mode() -> bool:
+    """Cycle through repeat modes: NONE -> ALL -> ONE -> NONE"""
+    try:
+        # Just call switch-repeat with iteration 0 to cycle to next mode
+        request = urllib.request.Request(
+            f"{config.PEAR_API_BASE}/switch-repeat",
+            data=json.dumps({"iteration": 0}).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(request, timeout=config.API_TIMEOUT) as response:
+            return response.status == 204
+    except OSError as error:
+        LOGGER.warning("Pear API cycle repeat failed: %s", error)
         return False

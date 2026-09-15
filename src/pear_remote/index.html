@@ -169,8 +169,10 @@
                 lastKnownElapsed = elapsed;
                 state = isPaused ? 'PAUSED' : 'PLAYING';
             }
-            document.getElementById('play-btn').innerText = isPaused ? 'Play ▶' : 'Pause ❚❚';
-            document.getElementById('btn-playpause').innerText = isPaused ? '▶' : '❚❚';
+            const playText = isPaused ? 'Play ▶' : 'Pause ❚❚';
+            const playIcon = isPaused ? '▶' : '❚❚';
+            document.getElementById('play-btn').innerText = playText;
+            document.getElementById('btn-playpause').innerText = playIcon;
             document.getElementById('time-duration').innerText = formatTime(currentDuration);
             if (isPaused) {
                 document.getElementById('time-elapsed').innerText = formatTime(lastKnownElapsed);
